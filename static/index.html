@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#007F61">
+<meta name="format-detection" content="telephone=no">
+<title>1点点 跨店支援</title>
+<style>
+:root{--g:#007F61;--g2:#006650;--gl:#E6F4F0;--a:#FFA400;--al:#FFF4DE;--ink:#1F2A27;--mute:#6B7A76;--line:#E3E8E6;--bg:#F3F6F5;--red:#C8402F;--redl:#FCE9E6;--blue:#2D6CDF;--bluel:#E8F0FD}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Noto Sans SC",system-ui,sans-serif;font-size:16px;line-height:1.5}
+.bar{background:var(--g);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 14px 12px;position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px}
+.bar .back{background:none;border:0;color:#fff;font-size:26px;line-height:1;padding:0 6px 0 0;cursor:pointer}
+.bar h1{flex:1;margin:0;font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar h1 small{display:block;font-size:12px;font-weight:400;opacity:.85}
+.demo{background:#FFA400;color:#3a2a00;font-size:12px;font-weight:700;text-align:center;padding:5px 10px}
+details.adv{border:1.5px dashed var(--line);border-radius:12px;padding:10px 12px}
+details.adv summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between;gap:8px}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::after{content:"›";transform:rotate(90deg);color:var(--mute)}details.adv[open] summary::after{transform:rotate(-90deg)}
+.demoacc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.demoacc button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:9px 10px;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+.demoacc button b{display:block;font-size:14px}.demoacc button span{font-size:12px;color:var(--mute)}
+.bar .out{background:#ffffff22;color:#fff;border:0;border-radius:8px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+main{max-width:760px;margin:0 auto;padding:14px 14px calc(30px + env(safe-area-inset-bottom))}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label{display:block;font-size:13px;color:var(--mute);margin:0 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);-webkit-appearance:none;appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,#999 50%),linear-gradient(135deg,#999 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--g);outline-offset:-1px}
+input[type=checkbox]{width:20px;height:20px;-webkit-appearance:auto;appearance:auto;accent-color:var(--g);margin:0}
+textarea{min-height:76px;resize:vertical}
+.f{margin-bottom:12px}.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:12px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;background:var(--g);color:#fff;white-space:nowrap;text-decoration:none}
+.btn:active{transform:scale(.98)}
+.btn.sec{background:#fff;color:var(--g);border:1.5px solid var(--g)}
+.btn.amb{background:var(--a);color:#3a2600}
+.btn.red{background:var(--red)}.btn.redo{background:#fff;color:var(--red);border:1.5px solid var(--red)}
+.btn.sm{padding:7px 12px;font-size:14px;border-radius:10px}
+.btn.link{background:transparent;color:var(--mute);font-weight:400;padding:6px 8px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.hero{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;padding:26px 12px;border-radius:20px;font-size:22px;box-shadow:0 6px 18px #007f6133}
+.hero span{font-size:13px;font-weight:400;opacity:.9}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.end{justify-content:flex-end}.sb{justify-content:space-between}
+.note{font-size:13px;color:var(--mute)}
+.banner{display:flex;align-items:center;justify-content:space-between;gap:10px;border-radius:14px;padding:13px 14px;margin-bottom:12px;font-size:15px;cursor:pointer;border:0;width:100%;text-align:left;font-family:inherit}
+.banner.info{background:var(--al);color:#5a3d00}.banner.err{background:var(--redl);color:var(--red)}.banner.ok{background:var(--gl);color:var(--g2)}
+.banner b{font-size:18px}
+.links{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.links a{display:flex;align-items:center;gap:12px;padding:15px 16px;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--line)}
+.links a:last-child{border-bottom:0}
+.links a .ic{width:34px;height:34px;border-radius:10px;background:var(--gl);color:var(--g);display:flex;align-items:center;justify-content:center;font-size:17px;flex:none}
+.links a .t{flex:1}.links a .t small{display:block;font-size:12px;color:var(--mute)}
+.links a::after{content:"›";color:#aab;font-size:22px}
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi div{font-size:12px;color:var(--mute)}.kpi b{font-size:22px;color:var(--g)}.kpi.warn b{color:var(--red)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{border:1.5px solid var(--line);border-radius:14px;padding:12px;background:#fff;font:inherit;text-align:left;cursor:pointer;color:var(--ink)}
+.seg button b{display:block;font-size:16px}.seg button span{font-size:12px;color:var(--mute)}
+.seg button.on{border-color:var(--g);background:var(--gl)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:10px}
+.chips button{flex:none;border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 13px;font:inherit;font-size:14px;color:var(--ink);cursor:pointer}
+.chips button.on{background:var(--g);border-color:var(--g);color:#fff}
+.staff{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.staff label{margin:0;display:flex;gap:8px;align-items:center;border:1.5px solid var(--line);border-radius:12px;padding:10px;color:var(--ink);cursor:pointer;background:#fff;font-size:15px}
+.staff label.on{border-color:var(--g);background:var(--gl)}
+.staff label small{color:var(--mute);font-size:11px}
+.hours{background:var(--gl);border-radius:14px;padding:12px 14px;display:flex;align-items:baseline;justify-content:space-between}
+.hours b{font-size:26px;color:var(--g)}
+.rec{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#fff}
+.rec.dim{opacity:.62}
+.rec .l1{display:flex;justify-content:space-between;gap:8px;font-weight:700;align-items:center}
+.rec .route{font-size:14px;margin:3px 0}
+.rec .meta{font-size:13px;color:var(--mute)}
+.rec .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:10px}
+.ev{font-size:12px;color:var(--mute);border-left:2px solid var(--line);padding-left:8px;margin-top:6px}
+.ev.red{color:var(--red);border-color:var(--red)}
+.adjbox{background:var(--bluel);color:#1d4fae;border-radius:10px;padding:8px 10px;margin-top:8px;font-size:13px}
+.adjbox b{color:#1d4fae}
+.st{display:inline-block;border-radius:6px;padding:1px 8px;font-size:12px;font-weight:700;white-space:nowrap}
+.st.pending{background:var(--al);color:#7a5200}.st.approved{background:var(--gl);color:var(--g2)}
+.st.rejected,.st.withdrawn,.st.cancelled,.st.off{background:#EEF0EF;color:var(--mute)}
+.st.disputed{background:var(--redl);color:var(--red)}
+.tag{display:inline-block;background:var(--bluel);color:var(--blue);border-radius:6px;padding:0 7px;font-size:12px;margin-right:4px;font-weight:700}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl th,.tbl td{padding:9px 6px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;vertical-align:middle}
+.tbl th{font-size:12px;color:var(--mute);font-weight:400}
+.tbl .n{text-align:right}.tbl td.wrap{white-space:normal;min-width:160px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.empty{text-align:center;color:var(--mute);padding:22px 10px}
+.hide{display:none!important}
+.sigpad{border:1.5px dashed #b9c4c0;border-radius:14px;background:#fff;touch-action:none;width:100%;height:180px;display:block}
+.sigimg{max-width:240px;max-height:100px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.login{max-width:380px;margin:8vh auto 0}
+.logo{width:64px;height:64px;border-radius:18px;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px;margin:0 auto 14px}
+.toast{position:fixed;left:50%;bottom:calc(28px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#1F2A27ee;color:#fff;padding:11px 18px;border-radius:12px;font-size:15px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.modal{position:fixed;inset:0;background:#0007;display:flex;align-items:flex-end;justify-content:center;z-index:50}
+.sheet{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
+.sheet h3{margin:0 0 10px;font-size:17px}
+@media (min-width:700px){.modal{align-items:center}.sheet{border-radius:20px}}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+.t-hol{background:var(--redl);color:var(--red)}.t-night{background:#EAE7F7;color:#3c2a7a}.t-long{background:var(--bluel);color:var(--blue)}.t-non{background:#F0EBFB;color:#6D4BC4}.t-sp{background:var(--al);color:#7a5200}
+.calc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{border-radius:12px;padding:10px;background:#fff;border:1px solid var(--line)}
+.tile div{font-size:12px;color:var(--mute)}.tile b{font-size:22px;font-variant-numeric:tabular-nums}
+.tile.op b{color:var(--g)}.tile.non b{color:#6D4BC4}.tile.tot{background:var(--ink);border-color:var(--ink);color:#fff}.tile.tot div{color:#ffffffb0}.tile.dimt b{color:var(--mute)}
+.money{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px}.money .r{display:flex;justify-content:space-between;font-size:15px;color:#7a5200}
+.mr{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px}.mr.sum{border-top:1px dashed var(--line);margin-top:4px;padding-top:8px;color:#7a5200;font-size:15px}
+.alert{border-radius:12px;padding:10px 12px;font-size:14px;display:flex;gap:10px;align-items:flex-start}.alert b{white-space:nowrap}
+.alert.hol{background:var(--redl);color:#8e2a1d}.alert.night{background:#EAE7F7;color:#3c2a7a}.alert.long{background:var(--bluel);color:#1d4fae}.alert.warn{background:var(--al);color:#5a3d00}
+.stack{display:flex;flex-direction:column;gap:8px}
+.rule{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;display:flex;flex-direction:column;gap:8px}
+.rule .hd{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.days button,.chips.f button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 8px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.days button.on{background:var(--g);border-color:var(--g);color:#fff}
+#natItems .chips button.on,#spc button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.addrule{border:1.5px dashed var(--g);background:none;color:var(--g);border-radius:12px;padding:9px;font:inherit;font-weight:700;cursor:pointer;width:100%;margin-top:8px}
+.map{height:220px;border-radius:12px;border:1px solid var(--line);margin-bottom:4px;background:#e9efec}
+.seg button:disabled{opacity:.45}
+@media (max-width:360px){.calc{grid-template-columns:1fr 1fr}}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<div class="modal hide" id="modal"><div class="sheet" id="sheet"></div></div>
+<script>
+(() => {
+"use strict";
+// ======================= 工具 =======================
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => (Math.round((n||0)*100)/100).toLocaleString("zh-CN",{maximumFractionDigits:2});
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const today = () => ymd(new Date());
+const thisMonth = () => today().slice(0,7);
+const prevMonth = () => { const d = new Date(); d.setDate(0); return ymd(d).slice(0,7); };
+const closeMonthDefault = () => new Date().getDate() <= 10 ? prevMonth() : thisMonth();
+const ts = t => { if (!t) return ""; const d = new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const tsFull = t => { const d = new Date(t); return `${ymd(d)} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
+const ls = { get(k){ try { return localStorage.getItem(k); } catch { return null; } }, set(k,v){ try { localStorage.setItem(k,v); } catch {} }, del(k){ try { localStorage.removeItem(k); } catch {} } };
+const SLOTS = []; for (let h = 0; h < 24; h++) SLOTS.push(`${pad(h)}:00`, `${pad(h)}:30`);
+const slotIdx = t => t === "24:00" ? 48 : (+t.slice(0,2))*2 + (t.slice(3) === "30" ? 1 : 0);
+const STATUS = {pending:"待对方确认", approved:"已归档", rejected:"已驳回", withdrawn:"已撤回", disputed:"疑义处理中", cancelled:"已取消"};
+const LIVE = s => s === "pending" || s === "approved" || s === "disputed";
+const REASONS = ["人手不足","伙伴请假顶班","新店开业","促销活动","培训带教","其他"];
+
+function toast(m){ const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600); }
+
+// ---- 弹窗（手机底部抽屉） ----
+let modalClose = null;
+function openSheet(html, onClose){ $("sheet").innerHTML = html; $("modal").classList.remove("hide"); modalClose = onClose || null; document.body.style.overflow = "hidden"; return $("sheet"); }
+function closeSheet(){ $("modal").classList.add("hide"); $("sheet").innerHTML = ""; document.body.style.overflow = ""; const f = modalClose; modalClose = null; if (f) f(); }
+$("modal").addEventListener("click", e => { if (e.target === $("modal") && !NEED_PROFILE) closeSheet(); });
+function ask({title="", text="", input=false, placeholder="", ok="确定", danger=false, html=""}){
+  return new Promise(res => {
+    let done = false;
+    const sh = openSheet(`${title?`<h3>${esc(title)}</h3>`:""}${text?`<p style="margin:0 0 12px">${esc(text)}</p>`:""}${html}
+      ${input?`<textarea id="askIn" placeholder="${esc(placeholder)}" style="margin-bottom:12px"></textarea>`:""}
+      <div class="g2"><button class="btn sec" id="askNo">${ok ? "取消" : "关闭"}</button>${ok?`<button class="btn ${danger?"red":""}" id="askYes">${esc(ok)}</button>`:""}</div>`,
+      () => { if (!done) { done = true; res({ok:false}); } });
+    sh.querySelector("#askNo").onclick = () => closeSheet();
+    if (ok) sh.querySelector("#askYes").onclick = () => { const v = input ? $("askIn").value.trim() : ""; if (input && !v) { $("askIn").focus(); return toast("请填写内容"); } done = true; closeSheet(); res({ok:true, value:v}); };
+  });
+}
+
+// ======================= API =======================
+let TOKEN = ls.get("ydd_token"), ME = null, DEVICE = "", NEED_PROFILE = false, DEMO = "";
+try { if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues)
+  navigator.userAgentData.getHighEntropyValues(["model"]).then(v => { DEVICE = (v && v.model) || ""; }).catch(() => {}); } catch {}
+async function api(path, {method="GET", body=null, raw=false} = {}){
+  const h = {"Content-Type":"application/json"};
+  if (TOKEN) h.Authorization = "Bearer " + TOKEN;
+  if (DEVICE) h["X-Device-Model"] = DEVICE;
+  let r;
+  try { r = await fetch(path, {method, headers:h, body: body ? JSON.stringify(body) : null, cache:"no-store"}); }
+  catch { throw new Error("网络连接失败，请检查网络后重试"); }
+  if (r.status === 401 && ME) { logoutLocal("登录已失效，请重新登录"); throw new Error("请重新登录"); }
+  if (raw && r.ok) return r;
+  let d = {}; try { d = await r.json(); } catch {}
+  if (!r.ok) throw new Error(d.error || "操作失败（" + r.status + "）");
+  return d;
+}
+async function download(path){
+  try {
+    const r = await api(path, {raw:true});
+    const cd = r.headers.get("Content-Disposition") || "", m = cd.match(/filename\*=UTF-8''([^;]+)/);
+    const name = m ? decodeURIComponent(m[1]) : "export.xlsx";
+    const blob = await r.blob(), a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast("已开始下载：" + name);
+  } catch (e) { toast(e.message); }
+}
+const run = async (btn, fn) => { if (btn) { btn.disabled = true; btn._t = btn.innerHTML; btn.innerHTML = '<span class="spin"></span>'; }
+  const at = location.hash;   // 加载途中已切换页面：旧页面的结果直接丢弃，不显示错误
+  try { return await fn(); } catch (e) { if (location.hash === at) toast(e.message); } finally { if (btn) { btn.disabled = false; btn.innerHTML = btn._t; } } };
+
+// ======================= 路由 =======================
+const app = $("app");
+let ACCOUNTS = [], pollTimer = null, seenInbox = new Set();
+const accName = c => (ACCOUNTS.find(a => a.code === c) || {}).name || c;
+const go = h => { if (location.hash === h) render(); else location.hash = h; };
+window.addEventListener("hashchange", () => { if (NEED_PROFILE) return; closeSheet(); render(); });
+
+function shell(title, sub, back, body){
+  app.innerHTML = (DEMO ? `<div class="demo">${esc(DEMO)}</div>` : "") + `<div class="bar">${back?`<button class="back" onclick="history.length>1?history.back():location.hash=''">‹</button>`:""}
+    <h1>${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</h1>${back?"":`<button class="out" id="logoutBtn">退出</button>`}</div><main id="main">${body}</main>`;
+  const lb = $("logoutBtn"); if (lb) lb.onclick = async () => { if ((await ask({text:"确定退出登录？", ok:"退出"})).ok) { try { await api("/api/logout", {method:"POST"}); } catch {} logoutLocal(); } };
+  window.scrollTo(0,0);
+  return $("main");
+}
+function logoutLocal(msg){ TOKEN = null; ME = null; ls.del("ydd_token"); clearInterval(pollTimer); seenInbox.clear(); if (msg) toast(msg); location.hash = ""; render(); }
+
+async function boot(){
+  if (TOKEN) { try { const m = await api("/api/me"); ME = m.me; NEED_PROFILE = !!m.needProfile; DEMO = m.demo || ""; } catch { TOKEN = null; ls.del("ydd_token"); } }
+  render();
+}
+async function loadAccounts(){ try { ACCOUNTS = (await api("/api/accounts")).accounts; } catch {} }
+
+async function render(){
+  clearInterval(pollTimer);
+  if (!ME) return renderLogin();
+  if (!ACCOUNTS.length) await loadAccounts();
+  const r = location.hash.replace("#","").split("?")[0];
+  const V = ME.role === "hr" ? {"":hrHome, accounts:hrAccounts, staff:hrStaff, records:hrRecords, logs:hrLogs, settings:hrSettings, distances:hrDistances} : {"":storeHome, new:storeNew, records:storeRecords, close:storeClose};
+  (V[r] || V[""])();
+  if (ME.role === "store" && NEED_PROFILE) { try { await profileEditor(ME.code, "gate"); } catch (e) { toast(e.message); } }
+}
+const qparam = k => new URLSearchParams(location.hash.split("?")[1] || "").get(k);
+
+// ======================= 登录 =======================
+async function renderLogin(){
+  let boot = {hasHR:true};
+  try { boot = await api("/api/bootstrap"); } catch (e) { app.innerHTML = `<main><div class="card login"><p>${esc(e.message)}</p></div></main>`; return; }
+  if (!boot.hasHR) {
+    app.innerHTML = `<main><form class="card login" id="f"><div class="logo">1点</div>
+      <h2 style="justify-content:center">首次使用：建立人资账号</h2>
+      <p class="note">人资账号负责管理门店、人员，处理疑义与月底导出。</p>
+      <div class="f"><label>人资账号</label><input id="c" value="HR" autocapitalize="off"></div>
+      <div class="f"><label>名称</label><input id="n" value="人资部"></div>
+      <button class="btn block">建立并登录</button></form></main>`;
+    $("f").onsubmit = e => { e.preventDefault(); run(e.submitter, async () => { const d = await api("/api/setup", {method:"POST", body:{code:$("c").value.trim(), name:$("n").value.trim()}}); afterLogin(d); }); };
+    return;
+  }
+  DEMO = boot.demo || "";
+  const demoList = boot.demoAccounts && boot.demoAccounts.length ? `<div class="f" style="margin-top:14px"><label>演示账号（点一下直接登录）</label>
+    <div class="demoacc">${boot.demoAccounts.map(a => `<button type="button" data-code="${esc(a.code)}"><b>${esc(a.name)}</b><span>${esc(a.code)}${a.role === "hr" ? " · 人资" : ""}</span></button>`).join("")}</div></div>` : "";
+  app.innerHTML = (DEMO ? `<div class="demo">${esc(DEMO)}</div>` : "") + `<main><form class="card login" id="f" autocomplete="off"><div class="logo">1点</div>
+    <h2 style="justify-content:center">跨店支援工时${DEMO ? "（演示版）" : ""}</h2>
+    <div class="f"><label>账号（门店编号）</label><input id="c" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="例：TJ001" value="${esc(ls.get("ydd_last")||"")}"></div>
+    <button class="btn block">登录</button>
+    <p class="note" style="text-align:center;margin:12px 0 0">账号无法登录请联系人资</p>${demoList}</form></main>`;
+  app.querySelectorAll(".demoacc [data-code]").forEach(b => b.onclick = e => run(e.currentTarget, async () => afterLogin(await api("/api/login", {method:"POST", body:{code:b.dataset.code}}))));
+  $("f").onsubmit = e => { e.preventDefault(); const code = $("c").value.trim(); if (!code) return toast("请输入账号");
+    run(e.submitter, async () => afterLogin(await api("/api/login", {method:"POST", body:{code}}))); };
+}
+async function afterLogin(d){ TOKEN = d.token; ME = d.me; ls.set("ydd_token", TOKEN); ls.set("ydd_last", ME.code); ACCOUNTS = [];
+  try { const m = await api("/api/me"); NEED_PROFILE = !!m.needProfile; DEMO = m.demo || ""; } catch {} location.hash = ""; render(); }
+
+// ======================= 共用：时间、性质 =======================
+const tmin = t => { const [h,m] = String(t).split(":"); return (+h)*60 + (+m); };
+const tlab = t => { const m = typeof t === "number" ? t : tmin(t); return m > 1440 ? `次日${pad(Math.floor((m-1440)/60))}:${pad(m%60)}` : `${pad(Math.floor(m/60))}:${pad(m%60)}`; };
+const tval = m => `${pad(Math.floor(m/60))}:${pad(m%60)}`;
+const END_SLOTS = []; for (let m = 30; m <= 1800; m += 30) END_SLOTS.push(tval(m));
+const tOpts = (arr, sel) => arr.map(t => `<option value="${t}" ${t===sel?"selected":""}>${tlab(t)}</option>`).join("");
+const NON_ITEMS = ["开会","大扫除","开业前筹备","培训"];
+const SPECIALS = ["延长营业", ...NON_ITEMS, "其他"];
+const totH = r => (r.op_hours ?? r.hours) + (r.non_hours || 0);
+const yen = n => "¥" + fmt(n);
+const isHQ = code => (ACCOUNTS.find(a => a.code === code) || {}).role === "hq";
+
+// ======================= 共用：记录卡片 =======================
+function recTags(r){
+  const t = [];
+  if (r.holiday) t.push(`<span class="tag t-hol">${esc(r.holiday)} 三倍薪</span>`);
+  if (r.nature === "non") t.push(`<span class="tag t-non">非营运${r.special ? " · " + esc(r.special) : ""}</span>`);
+  else if (r.special) t.push(`<span class="tag t-sp">${esc(r.special)}</span>`);
+  if (r.out_of_hours) t.push(`<span class="tag t-sp">超出营业时间</span>`);
+  if (r.night_pay) t.push(`<span class="tag t-night">夜班 ${fmt(r.night_hours)}h · ${yen(r.night_pay)}</span>`);
+  if (r.long_pay) t.push(`<span class="tag t-long">长途 ${fmt(r.long_km)}km · ${yen(r.long_pay)}</span>`);
+  return t.length ? `<div class="tags">${t.join("")}</div>` : "";
+}
+function recCard(r, actions, opt = {}){
+  const me = ME.code;
+  const dir = ME.role === "hr" ? "" : (r.from_store === me ? '<span class="tag">调出</span>' : '<span class="tag">调入</span>');
+  const ev = r.events || [];
+  const last = ev[ev.length-1];
+  let extra = "";
+  if (r.status === "disputed") extra = `<div class="ev red">疑义（${esc(accName(r.dispute_by))}）：${esc(r.dispute_note)}</div>`;
+  else if (last && last.note && ["rejected","cancelled"].includes(r.status)) extra = `<div class="ev">${esc(last.act)}（${esc(accName(last.who))}）：${esc(last.note)}</div>`;
+  else if (last && last.act === "维持记录") extra = `<div class="ev">人资维持记录${last.note?"："+esc(last.note):""}</div>`;
+  if (r.adj_by && r.status === "approved") {
+    const natChg = r.adj_nature && (r.adj_nature !== r.nature || (r.adj_special || "") !== (r.special || ""));
+    extra += `<div class="adjbox"><b>调整待${r.adj_by === me ? "对方" : (ME.role === "hr" ? "总部（人资）" : "你")}确认</b>
+    ${esc(r.start_time)}–${tlab(r.end_time)}（${fmt(totH(r))} 小时）→ <b>${esc(r.adj_start)}–${tlab(r.adj_end)}（${fmt(r.adj_hours)} 小时）</b>
+    ${natChg ? `<div>性质改为：<b>${r.adj_nature === "non" ? "非营运" : "营运"}${r.adj_special ? " · " + esc(r.adj_special) : ""}</b></div>` : ""}
+    <div>原因：${esc(r.adj_note)} · ${esc(accName(r.adj_by))} 提出</div></div>`;
+  }
+  const hist = opt.history && ev.length ? `<details style="margin-top:6px"><summary class="note">处理记录（${ev.length}）</summary>${ev.map(e => `<div class="ev">${ts(e.t)} · ${esc(accName(e.who))} · ${esc(e.act)}${e.note?"："+esc(e.note):""}</div>`).join("")}</details>` : "";
+  const hrs = r.non_hours ? `<b>${fmt(totH(r))} 小时</b>（营运 ${fmt(r.op_hours)} + 非营运 ${fmt(r.non_hours)}）` : `<b>${fmt(totH(r))} 小时</b>`;
+  return `<div class="rec ${LIVE(r.status)?"":"dim"}">
+    <div class="l1"><span>${dir}${esc(r.staff_name)} · ${esc(r.date.slice(5))}</span><span class="st ${r.status}">${STATUS[r.status]||r.status}</span></div>
+    <div class="route">${esc(r.from_name||accName(r.from_store))} → <b style="color:var(--g)">${esc(r.to_name||accName(r.to_store))}</b></div>
+    <div class="meta">${esc(r.start_time)}–${tlab(r.end_time)} · ${hrs} · ${esc(r.reason)}${r.note?" · "+esc(r.note):""}</div>
+    ${recTags(r)}
+    <div class="meta">发起：${esc(accName(r.initiator))} ${ts(r.created_at)}</div>${extra}${hist}
+    ${actions ? `<div class="acts">${actions}</div>` : ""}</div>`;
+}
+const monthInput = (id, v) => `<input type="month" id="${id}" value="${v}" style="width:auto;padding:7px 10px;font-size:15px">`;
+
+// ======================= 门店资料（营业时间、地址、定位） =======================
+const DAYN = ["周日","周一","周二","周三","周四","周五","周六","节假日"];
+let AMAP_LOADING = null;
+function loadAmap(key, sec){
+  if (window.AMap) return Promise.resolve(window.AMap);
+  if (AMAP_LOADING) return AMAP_LOADING;
+  AMAP_LOADING = new Promise((res, rej) => {
+    if (sec) window._AMapSecurityConfig = {securityJsCode: sec};
+    const s = document.createElement("script");
+    s.src = `https://webapi.amap.com/maps?v=2.0&key=${encodeURIComponent(key)}&plugin=AMap.Geocoder`;
+    s.onload = () => window.AMap ? res(window.AMap) : rej(new Error("地图载入失败"));
+    s.onerror = () => rej(new Error("地图载入失败，请检查网络或地图金钥"));
+    document.head.appendChild(s);
+    setTimeout(() => rej(new Error("地图载入逾时")), 12000);
+  });
+  return AMAP_LOADING;
+}
+// mode: "gate"（门店首次登录，必填） / "view"（门店查看） / "hr"（人资编辑任一门店）
+async function profileEditor(store, mode, after){
+  const p = await api("/api/store/profile" + (mode === "hr" ? "?store=" + encodeURIComponent(store) : ""));
+  const hq = p.account.role === "hq", ro = mode === "view" && !p.editable;
+  let hours = p.hours.length ? p.hours.map(h => ({...h})) : [{days:[], open:"10:00", close:"22:00"}];
+  let lat = p.account.lat, lng = p.account.lng;
+  const OPEN = []; for (let m = 300; m <= 1080; m += 30) OPEN.push(tval(m));
+  const CLOSE = []; for (let m = 900; m <= 1800; m += 30) CLOSE.push(tval(m));
+  const html = `<h3>${mode === "gate" ? "请先补齐门店资料" : esc(p.account.name) + " · 门店资料"}</h3>
+    ${mode === "gate" ? `<p class="note" style="margin:0 0 10px">夜班补贴与长途补贴需要营业时间与门店位置，填写后才能继续使用。</p>` : ""}
+    ${ro ? `<p class="note" style="margin:0 0 10px">资料已建立。如需修改，请联系人资。</p>` : ""}
+    ${hq ? "" : `<label>营业时间</label><div id="pfH" class="stack"></div>${ro ? "" : `<button class="addrule" id="pfAdd">＋ 新增其他营业时间（例如周末）</button>`}
+      <p class="note" style="margin:6px 0 12px">营业前 ${p.prepMin} 分钟准备、营业后 ${p.cleanMin} 分钟打烊都算正常营运时间。</p>`}
+    <div class="f"><label>${hq ? "总部地址" : "门店地址"}</label><input id="pfA" value="${esc(p.account.address||"")}" ${ro?"disabled":""} placeholder="例：天津市南开区奥城商业广场"></div>
+    <div id="pfMap" class="map ${p.amapKey ? "" : "hide"}"></div>
+    ${ro ? "" : `<div class="row" style="margin:8px 0">${p.amapKey ? `<button class="btn sec sm" id="pfGeo">按地址定位</button>` : ""}<button class="btn sec sm" id="pfGps">使用手机目前位置</button></div>`}
+    <div class="g2 f"><div><label>纬度</label><input id="pfLat" inputmode="decimal" value="${lat ?? ""}" ${ro?"disabled":""}></div><div><label>经度</label><input id="pfLng" inputmode="decimal" value="${lng ?? ""}" ${ro?"disabled":""}></div></div>
+    <p class="note" id="pfMsg" style="margin-top:-4px">${p.amapKey ? "可点地图选位置，或按地址定位。" : "建议在门店内按「使用手机目前位置」；用来计算两店距离。"}</p>
+    ${ro ? `<button class="btn sec block" id="pfClose">关闭</button>` : `<div class="${mode === "gate" ? "" : "g2"}">${mode === "gate" ? "" : `<button class="btn sec" id="pfClose">取消</button>`}<button class="btn ${mode === "gate" ? "block" : ""}" id="pfSave">保存${mode === "gate" ? "并继续" : ""}</button></div>`}`;
+  openSheet(html, () => { if (after && mode !== "gate") after(); });
+  const drawHours = () => {
+    if (hq) return;
+    $("pfH").innerHTML = hours.map((h,i) => `<div class="rule" data-i="${i}">
+      <div class="hd"><span>${i === 0 ? "每天（未另设的日子）" : "其他营业时间 " + i}</span>${i && !ro ? `<button class="btn link sm" data-del="${i}" style="color:var(--red)">删除</button>` : ""}</div>
+      ${i ? `<div class="days">${DAYN.map((d,k) => `<button data-d="${k}" class="${h.days.includes(k)?"on":""}" ${ro?"disabled":""}>${d}</button>`).join("")}</div>` : ""}
+      <div class="g2"><select data-f="open" ${ro?"disabled":""}>${tOpts(OPEN, h.open)}</select><select data-f="close" ${ro?"disabled":""}>${tOpts(CLOSE, h.close)}</select></div></div>`).join("");
+    $("pfH").querySelectorAll(".rule").forEach(el => { const h = hours[+el.dataset.i];
+      el.querySelectorAll("select").forEach(x => x.onchange = () => { h[x.dataset.f] = x.value; });
+      el.querySelectorAll("[data-d]").forEach(b => b.onclick = () => { const k = +b.dataset.d; h.days = h.days.includes(k) ? h.days.filter(x => x !== k) : [...h.days, k]; drawHours(); });
+      const del = el.querySelector("[data-del]"); if (del) del.onclick = () => { hours.splice(+del.dataset.del, 1); drawHours(); };
+    });
+  };
+  drawHours();
+  let coordSys = "";   // "gps" = 手机定位（WGS84），保存时由伺服器转为高德坐标
+  if ($("pfLat") && !ro) [$("pfLat"), $("pfLng")].forEach(x => x.addEventListener("input", () => { coordSys = ""; }));
+  const setPos = (la, ln, msg, sys) => { coordSys = sys || ""; lat = +(+la).toFixed(6); lng = +(+ln).toFixed(6); $("pfLat").value = lat; $("pfLng").value = lng; if (msg) $("pfMsg").textContent = msg; if (marker) marker.setPosition([lng, lat]); if (map) map.setCenter([lng, lat]); };
+  let map = null, marker = null;
+  if (p.amapKey) {
+    loadAmap(p.amapKey, p.amapSec).then(AMap => {
+      map = new AMap.Map("pfMap", {zoom: 15, center: lat ? [lng, lat] : [117.2, 39.12]});
+      marker = new AMap.Marker({position: lat ? [lng, lat] : [117.2, 39.12], draggable: !ro});
+      map.add(marker);
+      if (!ro) { map.on("click", e => setPos(e.lnglat.getLat(), e.lnglat.getLng(), "已选择地图位置"));
+        marker.on("dragend", e => setPos(e.lnglat.getLat(), e.lnglat.getLng(), "已移动定位点")); }
+    }).catch(e => { $("pfMap").classList.add("hide"); $("pfMsg").textContent = e.message + "，可改用手机目前位置或直接填经纬度。"; });
+  }
+  if ($("pfAdd")) $("pfAdd").onclick = () => { hours.push({days:[6,0], open:hours[0].open, close:hours[0].close}); drawHours(); };
+  if ($("pfGeo")) $("pfGeo").onclick = () => { const a = $("pfA").value.trim(); if (!a) return toast("请先填写地址");
+    loadAmap(p.amapKey, p.amapSec).then(AMap => new AMap.Geocoder().getLocation(a, (st, res) => {
+      if (st === "complete" && res.geocodes.length) { const g = res.geocodes[0].location; setPos(g.lat, g.lng, "已按地址定位，可再点地图微调"); } else toast("找不到这个地址，请写得更完整");
+    })).catch(e => toast(e.message)); };
+  if ($("pfGps")) $("pfGps").onclick = () => { if (!navigator.geolocation) return toast("这台装置无法定位");
+    $("pfMsg").textContent = "定位中…";
+    navigator.geolocation.getCurrentPosition(pos => setPos(pos.coords.latitude, pos.coords.longitude, `已取得目前位置（误差约 ${Math.round(pos.coords.accuracy)} 公尺）`, "gps"),
+      err => { $("pfMsg").textContent = "无法取得位置：请允许浏览器使用定位，或直接填经纬度。"; }, {enableHighAccuracy:true, timeout:15000}); };
+  if ($("pfClose")) $("pfClose").onclick = () => closeSheet();
+  if ($("pfSave")) $("pfSave").onclick = e => run(e.currentTarget, async () => {
+    await api("/api/store/profile", {method:"POST", body:{store, address:$("pfA").value.trim(), lat:$("pfLat").value, lng:$("pfLng").value, coordSys, hours}});
+    toast("门店资料已保存");
+    if (mode === "gate") { NEED_PROFILE = false; closeSheet(); render(); }
+    else { closeSheet(); }
+  });
+}
+
+// ======================= 门店：首页 =======================
+async function storeHome(){
+  const m = shell(ME.name, "门店 " + ME.code, false, `<div id="hb"></div>
+    <button class="btn hero" id="newBtn">＋ 发起支援<span>调出本店伙伴 / 请别店伙伴来支援</span></button>
+    <div style="height:12px"></div><div id="hs"></div>
+    <div class="links">
+      <a href="#records"><span class="ic">≡</span><span class="t">支援记录 · 调整<small>查看记录；当天时间有变、或改为非营运，在这里调整</small></span></a>
+      <a href="#close"><span class="ic">✓</span><span class="t">月底核对与签名<small>核对工时与补贴、提出疑义、签名、导出</small></span></a>
+      <a href="javascript:void 0" id="myStore"><span class="ic">店</span><span class="t">我的门店资料<small>营业时间、地址与位置</small></span></a>
+    </div>`);
+  $("newBtn").onclick = () => go("#new");
+  $("myStore").onclick = () => run(null, () => profileEditor(ME.code, "view"));
+  const load = async (first) => {
+    let d; try { d = await api("/api/home"); } catch (e) { if (first) toast(e.message); return; }
+    if (location.hash.replace("#","") !== "") return;
+    let b = "";
+    const todo = d.inbox.length + d.adjIn.length;
+    if (todo) b += `<button class="banner info" id="openInbox"><span>有 <b>${todo}</b> 笔${d.adjIn.length && !d.inbox.length ? "调整" : "支援"}等待你确认</span><span>去处理 ›</span></button>`;
+    if (d.remindMonth) b += `<button class="banner err" data-go="#close?m=${d.remindMonth}"><span>${d.remindMonth} 尚未完成月底签名确认</span><span>去确认 ›</span></button>`;
+    $("hb").innerHTML = b;
+    const ob = $("openInbox"); if (ob) ob.onclick = () => inboxSheet(d.inbox, d.adjIn, () => load());
+    $("hb").querySelectorAll("[data-go]").forEach(x => x.onclick = () => go(x.dataset.go));
+    $("hs").innerHTML = `<div class="kpis"><div class="kpi"><div>本月调出（已归档）</div><b>${fmt(d.summary.out_h)}</b> <span class="note">小时</span></div>
+      <div class="kpi"><div>本月调入（已归档）</div><b>${fmt(d.summary.in_h)}</b> <span class="note">小时</span></div></div>
+      ${d.outbox.length + d.adjOut.length ? `<div class="card"><h2>等待对方确认 <span class="st pending">${d.outbox.length + d.adjOut.length}</span></h2>${d.outbox.map(r => recCard(r, `<button class="btn link sm" data-ed="${r.id}">修改性质</button><button class="btn link sm" data-wd="${r.id}">撤回</button>`)).join("")}${d.adjOut.map(r => recCard(r, `<button class="btn link sm" data-ac="${r.id}">撤回调整</button>`)).join("")}</div>` : ""}`;
+    $("hs").querySelectorAll("[data-ed]").forEach(x => x.onclick = () => editSheet(d.outbox.find(r => r.id === +x.dataset.ed), () => load()));
+    $("hs").querySelectorAll("[data-ac]").forEach(x => x.onclick = async () => {
+      if (!(await ask({text:"撤回这笔调整？", ok:"撤回", danger:true})).ok) return;
+      run(null, async () => { await api(`/api/requests/${x.dataset.ac}/adjust_cancel`, {method:"POST"}); toast("已撤回调整"); load(); });
+    });
+    $("hs").querySelectorAll("[data-wd]").forEach(x => x.onclick = async () => {
+      if (!(await ask({text:"撤回这笔申请？", ok:"撤回", danger:true})).ok) return;
+      run(null, async () => { await api(`/api/requests/${x.dataset.wd}/withdraw`, {method:"POST"}); toast("已撤回"); load(); });
+    });
+    const keys = [...d.inbox.map(r => "r" + r.id), ...d.adjIn.map(r => "a" + r.id + ":" + r.adj_at)];
+    if (keys.some(k => !seenInbox.has(k)) && $("modal").classList.contains("hide")) { keys.forEach(k => seenInbox.add(k)); inboxSheet(d.inbox, d.adjIn, () => load()); }
+  };
+  load(true);
+  pollTimer = setInterval(() => { if (!document.hidden) load(); }, 30000);
+}
+
+// 待确认跳窗（支援申请 + 调整），门店与人资（总部）共用
+function inboxSheet(list, adjList, after){
+  let items = [...list.map(r => ({k:"r", r})), ...(adjList || []).map(r => ({k:"a", r}))];
+  const okLabel = r => ME.role === "hr" ? "同意（总部）" : (r.from_store === ME.code ? "同意调出" : "同意调入");
+  const draw = () => {
+    if (!items.length) { closeSheet(); toast("全部处理完成"); return; }
+    const sh = $("sheet");
+    const nr = items.filter(x => x.k === "r").length, na = items.length - nr;
+    sh.innerHTML = `<h3>${[nr ? `${nr} 笔支援申请` : "", na ? `${na} 笔调整` : ""].filter(Boolean).join("、")}待你确认</h3>
+      ${items.map(({k, r}) => `<div data-id="${r.id}" data-k="${k}">${recCard(r, k === "r"
+        ? `<button class="btn redo sm" data-a="no">驳回</button><button class="btn sm" data-a="ok">${okLabel(r)}</button>`
+        : `<button class="btn redo sm" data-a="no">驳回调整</button><button class="btn sm" data-a="ok">同意调整</button>`)}</div>`).join("")}
+      <button class="btn sec block" id="later">稍后处理</button>`;
+    $("later").onclick = () => closeSheet();
+    sh.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => {
+      const box = b.closest("[data-id]"), id = +box.dataset.id, k = box.dataset.k, it = items.find(x => x.k === k && x.r.id === id), r = it.r;
+      const done = msg => { toast(msg); items = items.filter(x => x !== it); draw(); };
+      if (b.dataset.a === "ok") {
+        await run(b, async () => { await api(`/api/requests/${id}/${k === "r" ? "approve" : "adjust_ok"}`, {method:"POST"}); done(k === "r" ? `已同意：${r.staff_name}` : `已同意调整：${r.staff_name}`); });
+      } else {
+        const acts = box.querySelector(".acts");
+        acts.innerHTML = `<textarea placeholder="请填写驳回原因" style="min-height:60px"></textarea><div class="row end" style="width:100%"><button class="btn link sm" data-c>取消</button><button class="btn red sm" data-r>确认驳回</button></div>`;
+        acts.querySelector("textarea").focus();
+        acts.querySelector("[data-c]").onclick = draw;
+        acts.querySelector("[data-r]").onclick = e => { const note = acts.querySelector("textarea").value.trim(); if (!note) return toast("请填写驳回原因");
+          run(e.currentTarget, async () => { await api(`/api/requests/${id}/${k === "r" ? "reject" : "adjust_no"}`, {method:"POST", body:{note}}); done("已驳回"); }); };
+      }
+    });
+  };
+  openSheet("", after); draw();
+}
+
+// 支援性质选择（营运 / 非营运 + 项目）
+function natureHTML(nature, special, lockNon){
+  return `<label>支援性质</label><div class="seg f" id="natSeg">
+      <button data-n="op" class="${nature === "op" ? "on" : ""}" ${lockNon ? "disabled" : ""}><b>营运支援</b><span>一般到店支援</span></button>
+      <button data-n="non" class="${nature === "non" ? "on" : ""}"><b>非营运支援</b><span>开会、大扫除、筹备、培训</span></button></div>
+    <div class="f ${nature === "non" ? "" : "hide"}" id="natItems"><div class="chips">${NON_ITEMS.map(x => `<button data-s="${x}" class="${special === x ? "on" : ""}">${x}</button>`).join("")}</div></div>`;
+}
+function bindNature(state){
+  $("natSeg").onclick = e => { const b = e.target.closest("button"); if (!b || b.disabled) return; state.nature = b.dataset.n;
+    [...$("natSeg").children].forEach(x => x.classList.toggle("on", x === b)); $("natItems").classList.toggle("hide", state.nature !== "non");
+    if (state.nature === "non" && !NON_ITEMS.includes(state.special)) { state.special = "开会"; [...$("natItems").querySelectorAll("button")].forEach(x => x.classList.toggle("on", x.dataset.s === "开会")); }
+    if (state.nature === "op" && NON_ITEMS.includes(state.special)) state.special = state.outOfHours ? "延长营业" : ""; state.onChange && state.onChange(); };
+  $("natItems").onclick = e => { const b = e.target.closest("button"); if (!b) return; state.special = b.dataset.s;
+    [...$("natItems").querySelectorAll("button")].forEach(x => x.classList.toggle("on", x === b)); state.onChange && state.onChange(); };
+}
+// 发起方在对方确认前修改性质
+function editSheet(r, after){
+  const st = {nature: r.nature || "op", special: r.special || "", outOfHours: !!r.out_of_hours};
+  let done = false;
+  openSheet(`<h3>修改支援性质</h3><div class="note" style="margin-bottom:10px">${esc(r.staff_name)} · ${esc(r.date)} · ${esc(r.start_time)}–${tlab(r.end_time)} · ${esc(r.to_name||accName(r.to_store))}</div>
+    ${natureHTML(st.nature, st.special, isHQ(r.to_store))}
+    ${isHQ(r.to_store) ? `<p class="note">去总部一律视为开会（非营运）。</p>` : ""}
+    <p class="note">对方确认前可直接修改，工时与补贴会自动重新计算。</p>
+    <div class="g2"><button class="btn sec" id="edNo">取消</button><button class="btn" id="edGo">保存</button></div>`, () => { if (done && after) after(); });
+  bindNature(st);
+  $("edNo").onclick = () => closeSheet();
+  $("edGo").onclick = e => run(e.currentTarget, async () => { await api(`/api/requests/${r.id}/edit`, {method:"POST", body:{nature:st.nature, special:st.special}}); done = true; closeSheet(); toast("已修改"); });
+}
+
+// 调整（已归档后）：时间 + 性质，需对方确认
+function adjustSheet(r, after){
+  const st = {nature: r.nature || "op", special: r.special || "", outOfHours: !!r.out_of_hours};
+  let done = false;
+  const other = r.from_store === ME.code ? r.to_store : r.from_store;
+  openSheet(`<h3>调整</h3>
+    <div class="note" style="margin-bottom:10px">${esc(r.staff_name)} · ${esc(r.date)} · ${esc(r.from_name||accName(r.from_store))} → ${esc(r.to_name||accName(r.to_store))}<br>
+    目前：<b>${esc(r.start_time)}–${tlab(r.end_time)}（${fmt(totH(r))} 小时）</b></div>
+    <div class="g2 f"><div><label>实际开始</label><select id="ajS">${tOpts(SLOTS, r.start_time)}</select></div><div><label>实际结束</label><select id="ajE">${tOpts(END_SLOTS, r.end_time)}</select></div></div>
+    ${natureHTML(st.nature, st.special, isHQ(r.to_store))}
+    ${st.nature === "op" && r.special && !NON_ITEMS.includes(r.special) ? `<p class="note">特殊状况：${esc(r.special)}</p>` : ""}
+    <div class="f"><label>调整原因（对方看得到）</label><select id="ajR"><option>当天提早结束</option><option>当天延长时间</option><option>到店时间变更</option><option>实际是非营运工作</option><option>登记时填错</option><option>其他</option></select></div>
+    <div class="f"><input id="ajN" placeholder="补充说明（选填）" maxlength="80"></div>
+    <p class="note" style="margin-top:-4px">提交后需要 <b>${esc(isHQ(other) ? "人资（总部）" : accName(other))}</b> 确认才会生效；工时与补贴由系统重新计算。</p>
+    <div class="g2"><button class="btn sec" id="ajNo">取消</button><button class="btn" id="ajGo">提交调整</button></div>`, () => { if (done && after) after(); });
+  bindNature(st);
+  $("ajNo").onclick = () => closeSheet();
+  $("ajGo").onclick = e => {
+    if (tmin($("ajE").value) <= tmin($("ajS").value)) return toast("结束时间必须晚于开始时间");
+    if ($("ajS").value === r.start_time && $("ajE").value === r.end_time && st.nature === r.nature && st.special === (r.special || "")) return toast("内容没有变化");
+    const note = $("ajR").value + ($("ajN").value.trim() ? "：" + $("ajN").value.trim() : "");
+    run(e.currentTarget, async () => { await api(`/api/requests/${r.id}/adjust`, {method:"POST", body:{start:$("ajS").value, end:$("ajE").value, nature:st.nature, special:st.special, note}});
+      done = true; closeSheet(); toast("已提交调整，等待对方确认"); });
+  };
+}
+const adjBtns = (r, signed) => {
+  if (r.status !== "approved" || signed) return "";
+  if (r.adj_by === ME.code) return `<button class="btn link sm" data-ac="${r.id}">撤回调整</button>`;
+  if (r.adj_by) return "";
+  return `<button class="btn sec sm" data-aj="${r.id}">调整</button>`;
+};
+function bindAdj(root, list, reload){
+  root.querySelectorAll("[data-aj]").forEach(b => b.onclick = () => adjustSheet(list.find(r => r.id === +b.dataset.aj), reload));
+  root.querySelectorAll("[data-ed]").forEach(b => b.onclick = () => editSheet(list.find(r => r.id === +b.dataset.ed), reload));
+  root.querySelectorAll("[data-ac]").forEach(b => b.onclick = async () => {
+    if (!(await ask({text:"撤回这笔调整？", ok:"撤回", danger:true})).ok) return;
+    run(null, async () => { await api(`/api/requests/${b.dataset.ac}/adjust_cancel`, {method:"POST"}); toast("已撤回调整"); reload(); });
+  });
+}
+
+// ======================= 门店：发起 =======================
+function storeNew(){
+  const opts = (arr, sel) => arr.map(t => `<option ${t===sel?"selected":""}>${t}</option>`).join("");
+  const targets = kind => ACCOUNTS.filter(a => a.active && a.code !== ME.code && (a.role === "store" || (a.role === "hq" && kind === "out")));
+  const storeOpts = kind => `<option value="">请选择</option>` + targets(kind).map(a => `<option value="${esc(a.code)}">${a.role === "hq" ? "🏢 " : ""}${esc(a.name)}（${esc(a.code)}）</option>`).join("");
+  shell("发起支援", ME.name, true, `<div class="card">
+    <div class="seg" id="kind"><button data-k="out" class="on"><b>调出</b><span>本店伙伴去别店 / 总部</span></button><button data-k="in"><b>调入</b><span>请别店伙伴来本店</span></button></div>
+    <div class="f" style="margin-top:14px"><label id="sl">① 去哪里支援</label><select id="store">${storeOpts("out")}</select></div>
+    <div class="f"><label id="pl">② 选择本店伙伴（可多选）</label><div id="people" class="staff"></div></div>
+    <div class="f"><label>③ 日期</label><input type="date" id="date" value="${today()}"></div>
+    <div class="g2 f"><div><label>开始</label><select id="st">${tOpts(SLOTS,"10:00")}</select></div><div><label>结束（可到次日）</label><select id="en">${tOpts(END_SLOTS,"18:00")}</select></div></div>
+    <div id="alerts" class="stack" style="gap:8px;margin-bottom:12px"></div>
+    <div class="f"><label>原因</label><select id="reason">${opts(REASONS,"人手不足")}</select></div>
+    <div class="f"><label>备注（选填）</label><input id="note" maxlength="100"></div>
+    <details class="adv f" id="adv"><summary>进阶设定 <span class="note" id="advSum">一般营运支援</span></summary><div style="margin-top:10px">${natureHTML("op","")}</div></details>
+    <div id="pv"></div>
+    <button class="btn block" id="go" style="margin-top:14px">提交，等待对方确认</button>
+    <p class="note" style="margin:10px 0 0">开会、大扫除、筹备、培训等非营运支援，可在「进阶设定」直接选择；提交后也能在「等待对方确认」里按「修改性质」。</p></div>`);
+  let kind = "out", staff = [], sel = new Set(), pv = null, seq = 0, timer = null;
+  const nat = {nature: "op", special: ""};
+  const natSum = () => { $("advSum").textContent = nat.nature === "non" ? "非营运 · " + nat.special : "一般营运支援"; $("advSum").style.color = nat.nature === "non" ? "#6b3fc7" : ""; };
+  const natBody = () => nat.nature === "non" ? {nature: "non", special: nat.special} : {};
+  const drawPeople = () => {
+    $("people").innerHTML = staff.length ? staff.filter(p => p.active).map(p => `<label class="${sel.has(p.id)?"on":""}"><input type="checkbox" value="${p.id}" ${sel.has(p.id)?"checked":""}>${esc(p.name)}${p.emp_no?` <small>${esc(p.emp_no)}</small>`:""}</label>`).join("")
+      : `<div class="note">${kind === "in" && !$("store").value ? "请先选择门店" : "伙伴清单为空，请联系人资添加"}</div>`;
+    preview();
+  };
+  const loadPeople = async () => {
+    const src = kind === "out" ? ME.code : $("store").value; sel.clear(); staff = [];
+    if (src) { try { staff = (await api("/api/staff?store=" + encodeURIComponent(src))).staff; } catch (e) { toast(e.message); } }
+    drawPeople();
+  };
+  const preview = () => { clearTimeout(timer); timer = setTimeout(doPreview, 250); };
+  const doPreview = async () => {
+    const store = $("store").value, n = Math.max(sel.size, 1);
+    if (!store || tmin($("en").value) <= tmin($("st").value)) { pv = null; $("pv").innerHTML = ""; $("alerts").innerHTML = tmin($("en").value) <= tmin($("st").value) ? `<div class="alert warn"><b>时间</b><span>结束时间必须晚于开始时间</span></div>` : ""; return; }
+    const my = ++seq;
+    let x; try { x = await api("/api/preview", {method:"POST", body:{kind, store, date:$("date").value, start:$("st").value, end:$("en").value, ...natBody()}}); } catch (e) { $("pv").innerHTML = `<div class="note">${esc(e.message)}</div>`; return; }
+    if (my !== seq) return; pv = x;
+    const al = [];
+    if (x.holiday) al.push(`<div class="alert hol"><b>三倍薪</b><span>${esc($("date").value)} 是${esc(x.holiday)}（法定节假日），本笔工时按三倍计算，请确认安排无误。</span></div>`);
+    if (x.to_hq) al.push(`<div class="alert warn"><b>总部</b><span>去总部一律视为开会（非营运），不计夜班，由人资确认。${x.lunch_hours ? `已扣除午休 ${fmt(x.lunch_hours)} 小时。` : ""}</span></div>`);
+    if (x.night_pay) al.push(`<div class="alert night"><b>夜班</b><span>含 ${fmt(x.night_hours)} 小时夜班营运时段，补贴 ${yen(x.night_pay)}。</span></div>`);
+    if (x.long_pay) al.push(`<div class="alert long"><b>长途</b><span>${x.long_override === true ? "人资指定为长途" : `两店${x.dist_source === "driving" ? "驾车距离" : "直线距离"}约 ${fmt(x.long_km)} 公里`}，长途补贴 ${yen(x.long_pay)}。</span></div>`);
+    if (x.out_of_hours) al.push(`<div class="alert warn"><b>超出营业时间</b><span>${esc(accName(store))}（${esc(x.bh.label)}）正常范围 ${esc(x.bh.from)}–${esc(x.bh.to)}，${nat.nature === "non" ? `已选「${esc(nat.special)}」，记为非营运。` : "提交时会请你选择特殊状况（或在下方「进阶设定」选非营运）。"}</span></div>`);
+    $("alerts").innerHTML = al.join("");
+    $("pv").innerHTML = `<div class="calc"><div class="tile op"><div>营运工时</div><b>${fmt(x.op_hours)}</b></div>
+        <div class="tile non ${x.non_hours ? "" : "dimt"}"><div>非营运工时</div><b>${x.non_hours ? fmt(x.non_hours) : "—"}</b></div>
+        <div class="tile tot"><div>合计${n > 1 ? `（每人）` : ""}</div><b>${fmt(x.total)}</b></div></div>
+      ${x.sub ? `<div class="money"><div class="r"><span>补贴${n > 1 ? `（每人，共 ${n} 人 ${yen(x.sub*n)}）` : ""}</span><b>${yen(x.sub)}</b></div><div class="note">由 ${esc(x.payer_name)} 承担</div></div>` : ""}
+      ${n > 1 ? `<div class="note" style="margin-top:6px">共 ${n} 人，合计 ${fmt(x.total*n)} 小时</div>` : ""}`;
+  };
+  $("kind").onclick = e => { const b = e.target.closest("button"); if (!b) return; kind = b.dataset.k;
+    [...$("kind").children].forEach(x => x.classList.toggle("on", x === b));
+    $("store").innerHTML = storeOpts(kind); advSync();
+    $("sl").textContent = kind === "out" ? "① 去哪里支援" : "① 请哪家门店派人";
+    $("pl").textContent = kind === "out" ? "② 选择本店伙伴（可多选）" : "② 选择对方门店伙伴（可多选）"; loadPeople(); };
+  nat.onChange = () => { natSum(); preview(); };
+  bindNature(nat);
+  const advSync = () => { const hq = isHQ($("store").value); $("adv").classList.toggle("hide", hq); if (hq && nat.nature === "non") { nat.nature = "op"; nat.special = ""; $("adv").querySelector("[data-n='op']").click(); } };
+  $("store").onchange = () => { advSync(); if (kind === "in") loadPeople(); else preview(); };
+  $("people").onchange = e => { const c = e.target; if (c.type !== "checkbox") return; c.checked ? sel.add(+c.value) : sel.delete(+c.value); c.parentElement.classList.toggle("on", c.checked); preview(); };
+  ["st","en","date"].forEach(id => $(id).onchange = preview);
+  const submit = (btn, special) => run(btn, async () => {
+    const d = await api("/api/requests", {method:"POST", body:{kind, store:$("store").value, staffIds:[...sel], date:$("date").value, start:$("st").value, end:$("en").value, reason:$("reason").value, note:$("note").value, special, ...natBody()}});
+    closeSheet(); toast(`已提交 ${d.created.length} 笔，等待 ${isHQ($("store").value) ? "人资（总部）" : accName($("store").value)} 确认`); go("");
+  });
+  $("go").onclick = async e => {
+    if (!$("store").value) return toast("请选择门店");
+    if (!sel.size) return toast("请选择伙伴");
+    if (tmin($("en").value) <= tmin($("st").value)) return toast("结束时间必须晚于开始时间");
+    await doPreview();
+    if (nat.nature === "non") return submit(e.currentTarget, nat.special);
+    if (pv && pv.out_of_hours) {
+      let pick = "";
+      openSheet(`<h3>支援时间超出营业时间</h3>
+        <p class="note">${esc(accName($("store").value))}（${esc(pv.bh.label)}）营业 ${esc(pv.bh.open)}–${esc(pv.bh.close)}，正常范围 ${esc(pv.bh.from)}–${esc(pv.bh.to)}（含营业前准备、营业后打烊）。本次 ${esc($("st").value)}–${tlab($("en").value)} 超出，请选择特殊状况：</p>
+        <div class="chips f" id="spc">${SPECIALS.map(x => `<button data-s="${x}">${x}</button>`).join("")}</div>
+        <p class="note">选「开会 / 大扫除 / 开业前筹备 / 培训」会记为非营运；「延长营业」照营运计，夜班算到实际结束；「其他」由人资汇总时判断。</p>
+        <div class="g2"><button class="btn sec" id="spNo">返回修改</button><button class="btn" id="spOk">确认提交</button></div>`);
+      $("spc").onclick = ev => { const b = ev.target.closest("button"); if (!b) return; pick = b.dataset.s; [...$("spc").children].forEach(x => x.classList.toggle("on", x === b)); };
+      $("spNo").onclick = () => closeSheet();
+      $("spOk").onclick = ev => { if (!pick) return toast("请选择一项特殊状况"); submit(ev.currentTarget, pick); };
+      return;
+    }
+    submit(e.currentTarget, "");
+  };
+  loadPeople();
+}
+
+// ======================= 门店：支援记录 =======================
+function storeRecords(){
+  shell("支援记录 · 调整", ME.name, true, `<div class="row sb" style="margin-bottom:10px">${monthInput("mon", qparam("m") || thisMonth())}<span class="note" id="cnt"></span></div>
+    <div class="chips" id="chips"></div><div id="list"><div class="empty">加载中…</div></div>`);
+  let all = [], filt = "";
+  const F = [["","全部"],["pending","待确认"],["approved","已归档"],["adj","调整中"],["out","调出"],["in","调入"],["non","非营运"],["sub","有补贴"],["disputed","疑义"],["closed","驳回/撤回/取消"]];
+  const draw = () => {
+    if (!$("chips")) return;
+    $("chips").innerHTML = F.map(([k,t]) => `<button data-f="${k}" class="${filt===k?"on":""}">${t}</button>`).join("");
+    const rs = all.filter(r => !filt || (filt === "out" ? r.from_store === ME.code : filt === "in" ? r.to_store === ME.code : filt === "closed" ? !LIVE(r.status)
+      : filt === "adj" ? !!r.adj_by && r.status === "approved" : filt === "non" ? r.nature === "non" : filt === "sub" ? (r.night_pay || r.long_pay) : r.status === filt));
+    const ap = all.filter(r => r.status === "approved");
+    $("cnt").textContent = `已归档 ${ap.length} 笔 / ${fmt(ap.reduce((s,r)=>s+totH(r),0))} 小时`;
+    $("list").innerHTML = rs.length ? rs.map(r => recCard(r, r.status === "pending" && r.initiator === ME.code ? `<button class="btn link sm" data-ed="${r.id}">修改性质</button>` : adjBtns(r, false), {history:true})).join("") : `<div class="empty">没有记录</div>`;
+    bindAdj($("list"), all, load);
+  };
+  $("chips").onclick = e => { const b = e.target.closest("button"); if (b) { filt = b.dataset.f; draw(); } };
+  const load = () => run(null, async () => { all = (await api("/api/requests?month=" + $("mon").value)).requests; draw(); });
+  $("mon").onchange = load; load();
+}
+
+// ======================= 门店：月底核对 =======================
+function storeClose(){
+  const month0 = qparam("m") || closeMonthDefault();
+  shell("月底核对与签名", ME.name, true, `<div class="row sb" style="margin-bottom:10px">${monthInput("mon", month0)}<button class="btn sec sm" id="exp">导出本店明细</button></div><div id="body"><div class="empty">加载中…</div></div>`);
+  $("exp").onclick = () => download("/api/export/store?month=" + $("mon").value);
+  let pad = null;
+  const load = () => run(null, async () => {
+    const month = $("mon").value, d = await api("/api/close?month=" + month);
+    const shown = d.records.filter(r => ["approved","disputed","cancelled"].includes(r.status));
+    let warn = "";
+    if (d.pending) warn += `<div class="banner info">还有 ${d.pending} 笔申请待处理，全部处理后才能签名。</div>`;
+    if (d.adjusting) warn += `<div class="banner info">有 ${d.adjusting} 笔调整等待确认，确认后才能签名。</div>`;
+    if (d.disputed) warn += `<div class="banner err">有 ${d.disputed} 笔疑义等待人资处理，处理后才能签名。</div>`;
+    if (d.confirm && !d.valid) warn += `<div class="banner err">签名后记录有变动，请重新核对并签名。</div>`;
+    const pay = d.payNight + d.payLong, earn = d.earnNight + d.earnLong;
+    const money = pay || earn ? `<div class="card"><h2>补贴</h2>
+      ${d.payNight ? `<div class="mr"><span>应付夜班补贴（别店伙伴来本店）</span><b>${yen(d.payNight)}</b></div>` : ""}
+      ${d.payLong ? `<div class="mr"><span>应付长途补贴</span><b>${yen(d.payLong)}</b></div>` : ""}
+      ${pay ? `<div class="mr sum"><span>本店应付补贴合计</span><b>${yen(pay)}</b></div>` : ""}
+      ${earn ? `<div class="mr"><span>本店伙伴外派应得补贴（由对方门店承担）</span><b>${yen(earn)}</b></div>` : ""}</div>` : "";
+    let sign;
+    if (d.valid) sign = `<div class="card"><h2>店长确认 <span class="st approved">已确认</span></h2><p class="note" style="margin-top:-4px">${esc(d.confirm.manager)} 于 ${ts(d.confirm.signed_at)} 确认</p><img class="sigimg" src="${esc(d.confirm.signature)}"><p class="note">如需修改，请联系人资退回确认。</p></div>`;
+    else if (!d.involved) sign = "";
+    else sign = `<div class="card"><h2>店长签名确认</h2>
+      <div class="f"><label>店长姓名</label><input id="mgr" maxlength="20" value="${esc(ls.get("ydd_mgr_"+ME.code)||"")}"></div>
+      <label>请在框内手写签名</label><canvas class="sigpad" id="pad"></canvas>
+      <div class="row sb" style="margin:8px 0 12px"><button class="btn link sm" id="clr">清除重签</button>
+        <label class="btn link sm" style="margin:0;color:var(--g)">上传签名照片<input type="file" accept="image/*" id="file" class="hide"></label></div>
+      <button class="btn block" id="sign" ${d.pending||d.disputed||d.adjusting?"disabled":""}>确认本月工时无误并提交签名</button></div>`;
+    $("body").innerHTML = `${warn}
+      <div class="calc" style="margin-bottom:12px"><div class="tile op"><div>营运工时</div><b>${fmt(d.opHours)}</b></div>
+        <div class="tile non ${d.nonHours ? "" : "dimt"}"><div>非营运工时</div><b>${d.nonHours ? fmt(d.nonHours) : "—"}</b></div>
+        <div class="tile tot"><div>合计工时</div><b>${fmt(d.totHours)}</b></div></div>
+      <div class="kpis"><div class="kpi"><div>调出</div><b>${fmt(d.outHours)}</b> <span class="note">小时</span></div><div class="kpi"><div>调入</div><b>${fmt(d.inHours)}</b> <span class="note">小时</span></div></div>
+      ${money}
+      ${sign}
+      <div class="card"><h2>${month} 明细 <span class="note">${d.approved} 笔</span></h2>${d.valid ? "" : `<p class="note" style="margin-top:-4px">时间有出入或实际是非营运：点「调整」，由对方门店确认；对记录本身有争议：点「提出疑义」，由人资处理。</p>`}
+      ${shown.length ? shown.map(r => recCard(r, r.status === "approved" && !d.valid ? adjBtns(r, false) + (r.adj_by ? "" : `<button class="btn redo sm" data-dp="${r.id}">提出疑义</button>`) : "", {history:true})).join("") : `<div class="empty">本月没有已归档的支援记录</div>`}</div>`;
+    bindAdj($("body"), d.records, load);
+    $("body").querySelectorAll("[data-dp]").forEach(b => b.onclick = async () => {
+      const a = await ask({title:"提出疑义", text:"疑义会通知对方门店，并由人资决定是否取消这笔记录。", input:true, placeholder:"例如：当天该伙伴实际未到店", ok:"提交疑义", danger:true});
+      if (a.ok) run(null, async () => { await api(`/api/requests/${b.dataset.dp}/dispute`, {method:"POST", body:{note:a.value}}); toast("已提交疑义"); load(); });
+    });
+    if ($("pad")) {
+      pad = makePad($("pad"));
+      $("clr").onclick = () => pad.clear();
+      $("file").onchange = async e => { const f = e.target.files[0]; if (f) await pad.loadFile(f); };
+      $("sign").onclick = async e => {
+        const mgr = $("mgr").value.trim(); if (!mgr) return toast("请填写店长姓名"); if (pad.isEmpty()) return toast("请先签名");
+        if (!(await ask({title:"确认提交", text:`${month}：营运 ${fmt(d.opHours)}、非营运 ${fmt(d.nonHours)}、合计 ${fmt(d.totHours)} 小时，共 ${d.approved} 笔${pay ? `；本店应付补贴 ${yen(pay)}` : ""}。`, ok:"确认无误"})).ok) return;
+        ls.set("ydd_mgr_"+ME.code, mgr);
+        run($("sign"), async () => { await api("/api/confirm", {method:"POST", body:{month, manager:mgr, signature:pad.toData()}}); toast("已完成签名确认"); load(); });
+      };
+    }
+  });
+  $("mon").onchange = load; load();
+}
+function makePad(cv){
+  const ctx = cv.getContext("2d"); let empty = true, drawing = false, last = null;
+  const fit = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = r.width*dpr; cv.height = r.height*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.fillStyle = "#fff"; ctx.fillRect(0,0,r.width,r.height); ctx.lineWidth = 2.6; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.strokeStyle = "#111"; empty = true; };
+  fit();
+  const pt = e => { const r = cv.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; };
+  cv.addEventListener("pointerdown", e => { drawing = true; last = pt(e); try { cv.setPointerCapture(e.pointerId); } catch {} e.preventDefault(); });
+  cv.addEventListener("pointermove", e => { if (!drawing) return; const p = pt(e); ctx.beginPath(); ctx.moveTo(last.x,last.y); ctx.lineTo(p.x,p.y); ctx.stroke(); last = p; empty = false; e.preventDefault(); });
+  ["pointerup","pointercancel","pointerleave"].forEach(t => cv.addEventListener(t, () => drawing = false));
+  return { clear: fit, isEmpty: () => empty,
+    loadFile: f => new Promise(res => { const img = new Image(); img.onload = () => { fit(); const r = cv.getBoundingClientRect(), s = Math.min(r.width/img.width, r.height/img.height);
+      ctx.drawImage(img, (r.width-img.width*s)/2, (r.height-img.height*s)/2, img.width*s, img.height*s); empty = false; res(); }; img.onerror = () => { toast("无法读取图片"); res(); }; img.src = URL.createObjectURL(f); }),
+    toData: () => { const o = document.createElement("canvas"), r = cv.getBoundingClientRect(); o.width = 600; o.height = Math.round(600*r.height/r.width); const c = o.getContext("2d"); c.fillStyle = "#fff"; c.fillRect(0,0,o.width,o.height); c.drawImage(cv,0,0,o.width,o.height); return o.toDataURL("image/jpeg", .75); } };
+}
+
+// ======================= 人资：首页 =======================
+function hrHome(){
+  const month0 = qparam("m") || closeMonthDefault();
+  shell(ME.name, "人资 · " + ME.code, false, `<div id="hqb"></div><div id="disp"></div>
+    <div class="card"><h2><span>月底核对进度</span>${monthInput("mon", month0)}</h2><div id="ov"><div class="empty">加载中…</div></div></div>
+    <div class="links">
+      <a href="#records"><span class="ic">≡</span><span class="t">全部支援记录<small>按月份、门店、状态查询</small></span></a>
+      <a href="#accounts"><span class="ic">店</span><span class="t">门店账号<small id="c1">新增、修改、营业时间与位置</small></span></a>
+      <a href="#staff"><span class="ic">人</span><span class="t">人员清单<small id="c2">伙伴新增、调店、离职、批量导入</small></span></a>
+      <a href="#settings"><span class="ic">⚙</span><span class="t">设定<small>三倍薪日期、补贴单价、午休时段、地图、两店距离与长途</small></span></a>
+      <a href="#logs"><span class="ic">⌚</span><span class="t">操作日志<small>登录 IP、手机型号、所有操作</small></span></a>
+    </div>`);
+  const load = () => run(null, async () => {
+    const month = $("mon").value, d = await api("/api/hr/home?month=" + month);
+    $("c1").textContent = `启用中 ${d.counts.stores} 家门店` + (d.counts.noProfile ? `，${d.counts.noProfile} 家尚未填营业时间 / 位置` : "");
+    $("c2").textContent = `在职 ${d.counts.staff} 人`;
+    const hq = d.hqInbox.length + d.hqAdj.length;
+    $("hqb").innerHTML = hq ? `<button class="banner info" id="hqOpen"><span>总部有 <b>${hq}</b> 笔支援 / 调整待你确认</span><span>去处理 ›</span></button>` : "";
+    if (hq) $("hqOpen").onclick = () => inboxSheet(d.hqInbox, d.hqAdj, () => load());
+    $("disp").innerHTML = d.disputes.length ? `<div class="card" style="border-color:var(--red)"><h2>疑义待处理 <span class="st disputed">${d.disputes.length}</span></h2>
+      ${d.disputes.map(r => recCard(r, `<button class="btn sec sm" data-k="${r.id}">维持记录</button><button class="btn red sm" data-c="${r.id}">同意取消</button>`, {history:true})).join("")}</div>` : "";
+    $("disp").querySelectorAll("[data-k],[data-c]").forEach(b => b.onclick = async () => {
+      const cancel = !!b.dataset.c, id = b.dataset.c || b.dataset.k;
+      const a = await ask({title: cancel ? "同意取消这笔记录" : "驳回疑义，维持记录", text: cancel ? "取消后不计入工时。" : "记录恢复为已归档。", input:true, placeholder:"处理说明（会显示给门店）", ok: cancel ? "同意取消" : "维持记录", danger:cancel});
+      if (a.ok) run(null, async () => { await api(`/api/requests/${id}/${cancel?"cancel":"keep"}`, {method:"POST", body:{note:a.value}}); toast("已处理"); load(); });
+    });
+    const o = d.overview, msgs = [];
+    if (o.pending) msgs.push(`${o.pending} 笔申请待确认`);
+    if (o.adjusting) msgs.push(`${o.adjusting} 笔调整待确认`);
+    if (o.disputed) msgs.push(`${o.disputed} 笔疑义待处理`);
+    if (o.stores.length > o.done) msgs.push(`${o.stores.length - o.done} 家门店未签名`);
+    const anyPay = o.stores.some(s => s.pay);
+    $("ov").innerHTML = !o.stores.length ? `<div class="empty">${month} 没有支援记录</div>` : `
+      <div class="calc" style="margin-bottom:10px"><div class="tile op"><div>营运工时</div><b>${fmt(o.opHours)}</b></div>
+        <div class="tile non ${o.nonHours ? "" : "dimt"}"><div>非营运工时</div><b>${o.nonHours ? fmt(o.nonHours) : "—"}</b></div>
+        <div class="tile tot"><div>合计 · ${o.approvedCount} 笔</div><b>${fmt(o.totalHours)}</b></div></div>
+      <div class="kpis"><div class="kpi"><div>签名进度</div><b>${o.done}/${o.stores.length}</b> <span class="note">家</span></div>
+        ${o.subsidy ? `<div class="kpi"><div>补贴合计</div><b>${yen(o.subsidy)}</b></div>` : `<div class="kpi"><div>补贴</div><b style="color:var(--mute)">—</b></div>`}</div>
+      ${o.special ? `<div class="banner info" style="cursor:default">本月有 ${o.special} 笔特殊状况 / 非营运记录，导出明细会标示，可在「全部支援记录」筛选查看。</div>` : ""}
+      ${o.ready ? `<div class="banner ok" style="cursor:default">✓ 所有涉及门店已确认完成</div>` : `<div class="banner info" style="cursor:default">${esc(msgs.join("；"))}</div>`}
+      <button class="btn amb block" id="exp" ${o.ready?"":"disabled"}>导出 ${month} 月结 Excel</button>
+      <div class="row" style="justify-content:center">${o.ready ? "" : `<button class="btn link" id="expF">未完成也要导出（预览）</button>`}<button class="btn link" id="recalc">按目前设定重新计算本月</button></div>
+      <div class="scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>门店</th><th class="n">调出</th><th class="n">调入</th>${anyPay ? `<th class="n">应付补贴</th>` : ""}<th>状态</th><th></th></tr></thead><tbody>
+      ${o.stores.map(s => `<tr><td>${esc(s.name)}<div class="note">${esc(s.code)}</div></td><td class="n">${fmt(s.out)}</td><td class="n">${fmt(s.in)}</td>${anyPay ? `<td class="n">${s.pay ? yen(s.pay) : "—"}</td>` : ""}
+        <td>${s.pending?`<span class="st pending">待审 ${s.pending}</span> `:""}${s.adjusting?`<span class="st pending">调整 ${s.adjusting}</span> `:""}${s.disputed?`<span class="st disputed">疑义 ${s.disputed}</span> `:""}${s.valid?`<span class="st approved">已签名</span><div class="note">${esc(s.confirm.manager)}</div>`:s.confirm?`<span class="st disputed">签名后有变动</span>`:`<span class="st off">未签名</span>`}</td>
+        <td>${s.confirm?`<button class="btn link sm" data-sig="${esc(s.code)}">签名</button><button class="btn link sm" data-ul="${esc(s.code)}">退回</button>`:""}</td></tr>`).join("")}</tbody></table></div>`;
+    const ex = $("exp"); if (ex) ex.onclick = () => download(`/api/hr/export?month=${month}`);
+    const ef = $("expF"); if (ef) ef.onclick = async () => { if ((await ask({text:"本月尚未全部核对完成，导出的数据之后可能变动。", ok:"仍要导出"})).ok) download(`/api/hr/export?month=${month}&force=1`); };
+    const rc = $("recalc"); if (rc) rc.onclick = async () => { if (!(await ask({title:"重新计算本月", text:`依目前的三倍薪日期、营业时间、门店位置与补贴单价，重新计算 ${month} 所有进行中的记录。数字有变动的门店若已签名，需要重新签名。`, ok:"重新计算"})).ok) return;
+      run(null, async () => { const r = await api("/api/hr/recalc", {method:"POST", body:{month}}); toast(r.changed ? `已重新计算，${r.changed} 笔有变动` : "已重新计算，没有变动"); load(); }); };
+    $("ov").querySelectorAll("[data-sig]").forEach(b => b.onclick = () => run(null, async () => { const s = await api(`/api/hr/signature?month=${month}&store=${encodeURIComponent(b.dataset.sig)}`);
+      ask({title:`${s.store_name} · ${s.manager}`, html:`<img src="${esc(s.signature)}" style="width:100%;border-radius:10px;border:1px solid var(--line);background:#fff"><p class="note">${ts(s.signed_at)} 确认：调出 ${fmt(s.out_hours)}、调入 ${fmt(s.in_hours)} 小时</p>`, ok:""}); }));
+    $("ov").querySelectorAll("[data-ul]").forEach(b => b.onclick = async () => { if ((await ask({text:`退回 ${accName(b.dataset.ul)} 的 ${month} 签名？门店需重新签名。`, ok:"退回", danger:true})).ok)
+      run(null, async () => { await api("/api/hr/unlock", {method:"POST", body:{month, store:b.dataset.ul}}); toast("已退回"); load(); }); });
+  });
+  $("mon").onchange = load; load();
+  pollTimer = setInterval(() => { if (!document.hidden && $("modal").classList.contains("hide")) load(); }, 60000);
+}
+
+// ======================= 人资：全部记录 =======================
+function hrRecords(){
+  shell("全部支援记录", "人资", true, `<div class="card"><div class="g2"><div>${monthInput("mon", thisMonth()).replace('style="','style="width:100%;')}</div>
+    <select id="store"><option value="">全部门店</option>${ACCOUNTS.filter(a => a.role === "store" || a.role === "hq").map(a => `<option value="${esc(a.code)}">${esc(a.name)}</option>`).join("")}</select></div></div>
+    <div class="chips" id="chips"></div><div class="note" id="cnt" style="margin:0 4px 8px"></div><div id="list"></div>`);
+  let all = [], filt = "";
+  const F = [["","全部"],["pending","待确认"],["approved","已归档"],["special","特殊状况"],["non","非营运"],["hol","三倍薪"],["sub","有补贴"],["disputed","疑义"],["cancelled","已取消"],["rejected","已驳回"],["withdrawn","已撤回"]];
+  const draw = () => { if (!$("chips")) return; $("chips").innerHTML = F.map(([k,t]) => `<button data-f="${k}" class="${filt===k?"on":""}">${t}</button>`).join("");
+    const rs = all.filter(r => !filt || (filt === "special" ? !!r.special || r.out_of_hours : filt === "non" ? r.nature === "non" : filt === "hol" ? !!r.holiday : filt === "sub" ? (r.night_pay || r.long_pay) : r.status === filt));
+    $("cnt").textContent = `${rs.length} 笔 · ${fmt(rs.reduce((s,r)=>s+totH(r),0))} 小时`;
+    $("list").innerHTML = rs.length ? rs.map(r => recCard(r, "", {history:true})).join("") : `<div class="empty">没有记录</div>`; };
+  $("chips").onclick = e => { const b = e.target.closest("button"); if (b) { filt = b.dataset.f; draw(); } };
+  const load = () => run(null, async () => { all = (await api(`/api/requests?month=${$("mon").value}&store=${encodeURIComponent($("store").value)}`)).requests; draw(); });
+  $("mon").onchange = load; $("store").onchange = load; load();
+}
+
+// ======================= 人资：设定 =======================
+function hrSettings(){
+  shell("设定", "人资", true, `<div id="body"><div class="empty">加载中…</div></div>`);
+  const load = () => run(null, async () => {
+    const d = await api("/api/hr/settings"), s = d.settings, dk = d.demoKeys;
+    const keyIn = (k) => dk ? `<input id="s_${k}" disabled placeholder="${dk[k] ? "已套用正式版金钥（演示版不显示）" : "正式版尚未设定"}">` : `<input id="s_${k}" value="${esc(s[k])}">`;
+    const wk = dt => "周" + "日一二三四五六"[new Date(dt + "T00:00:00").getDay()];
+    $("body").innerHTML = `
+      <div class="card"><h2>三倍薪日期（法定节假日）</h2>
+        <p class="note" style="margin-top:-4px">已预置 2027 年法定节假日 13 天（依国务院 2026-11-05 公布的安排）。调休放假日与调休上班日不算三倍薪。每年公布新安排后请在这里新增。</p>
+        <div class="scroll" style="max-height:320px;overflow:auto"><table class="tbl"><tbody>${d.holidays.map(h => `<tr><td>${esc(h.date)}</td><td>${wk(h.date)}</td><td><span class="tag t-hol">${esc(h.name)}</span></td><td class="n"><button class="btn link sm" data-del="${esc(h.date)}" style="color:var(--red)">删除</button></td></tr>`).join("") || `<tr><td class="empty">尚未设定</td></tr>`}</tbody></table></div>
+        <div class="g2" style="margin-top:10px"><input type="date" id="hDate"><input id="hName" placeholder="节日名称，例：春节（初一）"></div>
+        <button class="btn sec block" id="hAdd" style="margin-top:8px">新增三倍薪日</button></div>
+      <div class="card"><h2>补贴与计算规则</h2>
+        <div class="g2 f"><div><label>夜班补贴（元 / 小时）</label><input id="s_night_pay" inputmode="decimal" value="${esc(s.night_pay)}"></div><div><label>夜班起算时间</label><input id="s_night_start" value="${esc(s.night_start)}"></div></div>
+        <div class="g2 f"><div><label>长途补贴（元 / 小时）</label><input id="s_long_pay" inputmode="decimal" value="${esc(s.long_pay)}"></div><div><label>长途门槛（公里，含）</label><input id="s_long_km" inputmode="decimal" value="${esc(s.long_km)}"></div></div>
+        <div class="g2 f"><div><label>营业前准备（分钟）</label><input id="s_prep_min" inputmode="numeric" value="${esc(s.prep_min)}"></div><div><label>营业后打烊（分钟）</label><input id="s_clean_min" inputmode="numeric" value="${esc(s.clean_min)}"></div></div>
+        <div class="g2 f"><div><label>总部午休开始</label><input id="s_hq_lunch_start" value="${esc(s.hq_lunch_start)}"></div><div><label>总部午休结束</label><input id="s_hq_lunch_end" value="${esc(s.hq_lunch_end)}"></div></div>
+        <p class="note">修改后只影响之后的计算；已有的记录可在首页按「按目前设定重新计算本月」。</p>
+        <button class="btn block" id="sSave">保存补贴与规则</button></div>
+      <div class="card"><h2>地图（高德）</h2>
+        <p class="note" style="margin-top:-4px">门店确认位置时显示地图用。到高德开放平台（lbs.amap.com）申请「Web 端（JS API）」金钥与安全密钥后填入。未填时门店可用手机定位或直接填经纬度。</p>
+        <div class="f"><label>Key</label>${keyIn("amap_key")}</div>
+        <div class="f"><label>安全密钥</label>${keyIn("amap_sec")}</div>
+        ${dk ? `<p class="note">演示版：金钥每天重置时自动从正式版套用。</p>` : `<button class="btn sec block" id="mSave">保存地图设定</button>`}</div>
+      <div class="card"><h2>长途距离</h2>
+        <p class="note" style="margin-top:-4px">驾车距离需要另一组「Web 服务」金钥（同一个高德应用里再「添加 Key」，服务平台选「Web 服务」）。没填或高德连不上时，自动改用直线距离。</p>
+        <div class="f"><label>计算方式</label><select id="s_dist_mode"><option value="driving" ${s.dist_mode === "driving" ? "selected" : ""}>驾车距离（高德）</option><option value="straight" ${s.dist_mode === "straight" ? "selected" : ""}>直线距离</option></select></div>
+        <div class="f"><label>Web 服务 Key</label>${keyIn("amap_ws_key")}</div>
+        <div class="g2"><button class="btn sec" id="dSave">保存</button><button class="btn" id="dGo">两店距离与长途 ›</button></div></div>`;
+    $("body").querySelectorAll("[data-del]").forEach(b => b.onclick = async () => { if (!(await ask({text:`删除三倍薪日 ${b.dataset.del}？`, ok:"删除", danger:true})).ok) return;
+      run(null, async () => { await api("/api/hr/holidays", {method:"POST", body:{date:b.dataset.del, delete:true}}); toast("已删除"); load(); }); });
+    $("hAdd").onclick = e => { if (!$("hDate").value) return toast("请选择日期");
+      run(e.currentTarget, async () => { await api("/api/hr/holidays", {method:"POST", body:{date:$("hDate").value, name:$("hName").value.trim()}}); toast("已新增"); load(); }); };
+    const save = (keys, btn) => run(btn, async () => { const o = {}; keys.forEach(k => o[k] = $("s_" + k).value.trim());
+      await api("/api/hr/settings", {method:"POST", body:{settings:o}}); toast("已保存"); });
+    $("sSave").onclick = e => save(["night_pay","night_start","long_pay","long_km","prep_min","clean_min","hq_lunch_start","hq_lunch_end"], e.currentTarget);
+    if ($("mSave")) $("mSave").onclick = e => save(["amap_key","amap_sec"], e.currentTarget);
+    $("dSave").onclick = e => save(dk ? ["dist_mode"] : ["dist_mode","amap_ws_key"], e.currentTarget);
+    $("dGo").onclick = () => go("#distances");
+  });
+  load();
+}
+
+// ======================= 人资：两店距离与长途 =======================
+function hrDistances(){
+  shell("两店距离与长途", "人资", true, `<div class="seg" id="dSeg"><button data-all="0" class="on">有往来的门店</button><button data-all="1">所有门店组合</button></div><div id="body"><div class="empty">计算中…（首次需向高德查询，请稍候）</div></div>`);
+  let all = "0";
+  const SRC = {driving:"驾车", straight:"直线", pending:"待计算"};
+  const load = () => run(null, async () => {
+    const d = await api("/api/hr/distances?all=" + all);
+    const head = `<p class="note">长途门槛：${d.limit} 公里（含）。计算方式：${d.mode === "driving" ? (d.hasKey ? "驾车距离" : "驾车距离（尚未填 Web 服务 Key，暂用直线）") : "直线距离"}。
+      人资指定的结果优先于距离判断；改了之后，可在首页按「重新计算本月」套用到本月记录。</p>
+      ${d.errors ? `<div class="banner err"><span>有 ${d.errors} 组向高德查询失败，暂用直线距离：${esc(d.pairs.find(p => p.error).error)}</span></div>` : ""}`;
+    const rowH = p => `<tr><td>${esc(p.an)}<br>${esc(p.bn)}</td>
+      <td class="n">${p.km == null ? `<span class="note">${p.source === "pending" ? "待计算" : "未定位"}</span>` : fmt(p.km) + `<br><span class="note">${SRC[p.source] || ""}</span>`}</td>
+      <td style="width:46%"><select data-a="${esc(p.a)}" data-b="${esc(p.b)}" style="width:100%">
+        <option value="" ${p.override == null ? "selected" : ""}>自动：${p.auto ? "长途" : "非长途"}</option>
+        <option value="1" ${p.override === true ? "selected" : ""}>指定长途</option>
+        <option value="0" ${p.override === false ? "selected" : ""}>指定非长途</option></select>
+        ${p.km != null || p.source === "pending" ? `<div><button class="btn link sm" data-rf="${esc(p.a)}|${esc(p.b)}" style="padding-left:0">重新取得距离</button></div>` : ""}</td></tr>`;
+    $("body").innerHTML = head + `<div class="card"><table class="tbl"><thead><tr><th>两店</th><th class="n">公里</th><th>是否长途</th></tr></thead><tbody>${d.pairs.map(rowH).join("") || `<tr><td colspan="3" class="empty">${all === "1" ? "还没有已定位的门店" : "还没有跨店支援记录；可切到「所有门店组合」"}</td></tr>`}</tbody></table></div>`;
+    $("body").querySelectorAll("select[data-a]").forEach(x => x.onchange = () => run(null, async () => {
+      await api("/api/hr/distances", {method:"POST", body:{a:x.dataset.a, b:x.dataset.b, isLong: x.value === "" ? null : x.value === "1"}});
+      toast("已保存，按「重新计算本月」可套用到本月记录"); load(); }));
+    $("body").querySelectorAll("[data-rf]").forEach(x => x.onclick = e => run(e.currentTarget, async () => {
+      const [a, b] = x.dataset.rf.split("|"); const r = await api("/api/hr/distances", {method:"POST", body:{a, b, refresh:true}});
+      toast(r.error ? "高德查询失败，暂用直线距离" : "已更新：" + fmt(r.km) + " 公里"); load(); }));
+  });
+  $("dSeg").querySelectorAll("button").forEach(b => b.onclick = () => { $("dSeg").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); all = b.dataset.all; load(); });
+  load();
+}
+
+// ======================= 人资：批量导入（共用） =======================
+function importCard(kind){
+  return `<div class="card"><h2>批量导入</h2>
+    <p class="note" style="margin-top:-4px">${kind === "store" ? "栏位：门店编号、门店名称、门店手机号（选填）。已存在的编号会更新名称与电话。" : "栏位：门店编号（或门店名称）、姓名、工号（选填）。有工号时以工号比对，门店不同视为调店。"}</p>
+    <div class="row" style="margin-bottom:10px"><button class="btn sec sm" id="tpl">下载 Excel 模板</button>
+      <label class="btn sm" style="margin:0;color:#fff">上传 Excel / CSV<input type="file" accept=".xlsx,.csv,.txt" id="imFile" class="hide"></label></div>
+    <details><summary class="note">或从 Excel 复制贴上</summary><textarea id="imText" style="margin-top:8px"></textarea>
+      <div class="row end" style="margin-top:6px"><button class="btn sec sm" id="imParse">预览</button></div></details>
+    <div id="imOut"></div></div>`;
+}
+function bindImport(kind, after){
+  let last = null;
+  $("tpl").onclick = () => download("/api/hr/template?kind=" + kind);
+  const preview = async payload => {
+    const d = await api("/api/hr/import", {method:"POST", body:{kind, ...payload}});
+    last = payload;
+    const c = s => d.plan.filter(p => p.st === s).length, todo = c("new") + c("update");
+    const T = {new:["新增","approved"], update:["更新","pending"], same:["不变","off"], error:["错误","disputed"]};
+    const show = p => kind === "store" ? `${esc(p.data.code)} ${esc(p.data.name)}` : `${esc(p.data.store)} · ${esc(p.data.name)}${p.data.empNo?" · "+esc(p.data.empNo):""}`;
+    $("imOut").innerHTML = `<div class="note" style="margin-top:12px">共 ${d.plan.length} 行：新增 <b>${c("new")}</b> · 更新 <b>${c("update")}</b> · 不变 ${c("same")} · <span style="color:var(--red)">错误 ${c("error")}</span></div>
+      <div class="scroll" style="max-height:300px;overflow:auto"><table class="tbl"><tbody>${[...d.plan].sort((a,b) => (b.st==="error") - (a.st==="error")).map(p => `<tr><td>第${p.line}行</td><td>${show(p)}</td><td><span class="st ${T[p.st][1]}">${T[p.st][0]}</span></td><td class="note wrap">${esc(p.msg)}</td></tr>`).join("")}</tbody></table></div>
+      ${c("error") ? `<p class="note" style="color:var(--red)">错误的行会略过，可修正后重新上传。</p>` : ""}
+      <button class="btn block" id="imGo" style="margin-top:10px" ${todo?"":"disabled"}>确认导入（新增 ${c("new")}、更新 ${c("update")}）</button>`;
+    $("imGo").onclick = e => run(e.currentTarget, async () => { const r = await api("/api/hr/import", {method:"POST", body:{kind, ...last, apply:true}});
+      toast(`导入完成：新增 ${r.new}、更新 ${r.updated}`); $("imOut").innerHTML = ""; $("imText").value = ""; await loadAccounts(); after(); });
+  };
+  $("imFile").onchange = e => { const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    if (f.size > 8*1024*1024) return toast("文件太大");
+    const rd = new FileReader(); rd.onload = () => run(null, () => preview({file:{name:f.name, data:String(rd.result).split(",")[1]}})); rd.readAsDataURL(f); };
+  $("imParse").onclick = e => { const t = $("imText").value; if (!t.trim()) return toast("请先贴上内容"); run(e.currentTarget, () => preview({text:t})); };
+}
+
+// ======================= 人资：门店账号 =======================
+function hrAccounts(){
+  shell("门店账号", "人资", true, `<div class="card" id="fc"><h2 id="ft">新增门店</h2>
+    <div class="g2 f"><div><label>门店编号（登录账号）</label><input id="code" autocapitalize="characters" placeholder="TJ001"></div><div><label>门店名称</label><input id="name" placeholder="南开大悦城店"></div></div>
+    <div class="g2 f"><div><label>门店手机号（选填）</label><input id="phone" inputmode="tel"></div><div><label>类型</label><select id="role"><option value="store">门店</option><option value="hq">总部（只记地址，不能登录）</option><option value="hr">人资</option></select></div></div>
+    <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-bottom:12px"><input type="checkbox" id="act" checked> 启用（停用后无法登录）</label>
+    <div class="row end"><button class="btn link hide" id="cx">取消修改</button><button class="btn" id="save">保存</button></div></div>
+    ${importCard("store")}
+    <div class="card"><h2>账号清单 <input id="q" placeholder="搜索" style="width:140px;padding:6px 10px;font-size:14px"></h2><div class="scroll"><table class="tbl" id="tbl"></table></div></div>`);
+  let editing = null;
+  const reset = () => { editing = null; ["code","name","phone"].forEach(i => $(i).value = ""); $("code").disabled = false; $("role").value = "store"; $("act").checked = true; $("ft").textContent = "新增门店"; $("cx").classList.add("hide"); };
+  const draw = () => { const q = $("q").value.trim().toLowerCase();
+    const rs = ACCOUNTS.filter(a => !q || a.code.toLowerCase().includes(q) || a.name.includes(q));
+    $("tbl").innerHTML = `<thead><tr><th>账号</th><th>名称</th><th>位置</th><th>状态</th><th></th></tr></thead><tbody>${rs.map(a => `<tr><td><b>${esc(a.code)}</b>${a.role==="hr"?' <span class="tag">人资</span>':a.role==="hq"?' <span class="tag">总部</span>':""}</td><td>${esc(a.name)}${a.phone?`<div class="note">${esc(a.phone)}</div>`:""}</td>
+      <td>${a.role === "hr" ? "" : a.lat != null ? `<span class="st approved">已定位</span>` : `<span class="st pending">未填</span>`}</td><td>${a.active?'<span class="st approved">启用</span>':'<span class="st off">停用</span>'}</td>
+      <td>${a.role !== "hr" ? `<button class="btn link sm" data-p="${esc(a.code)}">${a.role === "hq" ? "地址" : "营业 / 位置"}</button>` : ""}<button class="btn link sm" data-e="${esc(a.code)}">修改</button></td></tr>`).join("")}</tbody>`;
+    $("tbl").querySelectorAll("[data-p]").forEach(b => b.onclick = () => run(null, () => profileEditor(b.dataset.p, "hr", async () => { await loadAccounts(); draw(); })));
+    $("tbl").querySelectorAll("[data-e]").forEach(b => b.onclick = () => { const a = ACCOUNTS.find(x => x.code === b.dataset.e); editing = a.code;
+      $("code").value = a.code; $("code").disabled = true; $("name").value = a.name; $("phone").value = a.phone || ""; $("role").value = a.role; $("act").checked = !!a.active;
+      $("ft").textContent = "修改 " + a.code; $("cx").classList.remove("hide"); $("fc").scrollIntoView({behavior:"smooth"}); }); };
+  $("q").oninput = draw; $("cx").onclick = reset;
+  $("save").onclick = e => run(e.currentTarget, async () => {
+    await api("/api/hr/accounts", {method:"POST", body:{code: editing || $("code").value.trim(), name:$("name").value.trim(), phone:$("phone").value.trim(), role:$("role").value, active:$("act").checked, isNew:!editing}});
+    toast("已保存"); reset(); await loadAccounts(); draw(); });
+  bindImport("store", draw);
+  run(null, async () => { await loadAccounts(); draw(); });
+}
+
+// ======================= 人资：人员清单 =======================
+function hrStaff(){
+  const so = ACCOUNTS.filter(a => a.role === "store").map(a => `<option value="${esc(a.code)}">${esc(a.name)}（${esc(a.code)}）</option>`).join("");
+  shell("人员清单", "人资", true, `<div class="card" id="fc"><h2 id="ft">新增伙伴</h2>
+    <div class="f"><label>所属门店</label><select id="store"><option value="">请选择</option>${so}</select></div>
+    <div class="g2 f"><div><label>姓名</label><input id="name" maxlength="20"></div><div><label>工号（选填）</label><input id="emp" maxlength="20"></div></div>
+    <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-bottom:12px"><input type="checkbox" id="act" checked> 在职</label>
+    <div class="row end"><button class="btn link hide" id="cx">取消修改</button><button class="btn" id="save">保存</button></div></div>
+    ${importCard("staff")}
+    <div class="card"><h2>伙伴 <span class="note" id="cnt"></span></h2><div class="g2 f"><select id="fs"><option value="">全部门店</option>${so}</select><input id="q" placeholder="搜索姓名/工号"></div><div class="scroll"><table class="tbl" id="tbl"></table></div></div>`);
+  let staff = [], editing = null;
+  const reset = () => { editing = null; $("name").value = ""; $("emp").value = ""; $("act").checked = true; $("ft").textContent = "新增伙伴"; $("cx").classList.add("hide"); };
+  const draw = () => { const f = $("fs").value, q = $("q").value.trim();
+    const rs = staff.filter(p => (!f || p.store === f) && (!q || p.name.includes(q) || (p.emp_no||"").includes(q)));
+    $("cnt").textContent = `${rs.filter(p => p.active).length} 人在职`;
+    $("tbl").innerHTML = rs.length ? `<thead><tr><th>门店</th><th>姓名</th><th>工号</th><th>状态</th><th></th></tr></thead><tbody>${rs.map(p => `<tr><td>${esc(accName(p.store))}</td><td>${esc(p.name)}</td><td>${esc(p.emp_no||"")}</td><td>${p.active?'<span class="st approved">在职</span>':'<span class="st off">离职</span>'}</td><td><button class="btn link sm" data-e="${p.id}">修改</button></td></tr>`).join("")}</tbody>` : `<tr><td class="empty">没有伙伴</td></tr>`;
+    $("tbl").querySelectorAll("[data-e]").forEach(b => b.onclick = () => { const p = staff.find(x => x.id === +b.dataset.e); editing = p.id;
+      $("store").value = p.store; $("name").value = p.name; $("emp").value = p.emp_no || ""; $("act").checked = !!p.active;
+      $("ft").textContent = "修改 " + p.name; $("cx").classList.remove("hide"); $("fc").scrollIntoView({behavior:"smooth"}); }); };
+  const load = () => run(null, async () => { staff = (await api("/api/staff")).staff; draw(); });
+  $("fs").onchange = draw; $("q").oninput = draw; $("cx").onclick = reset;
+  $("save").onclick = e => run(e.currentTarget, async () => {
+    await api("/api/hr/staff", {method:"POST", body:{id:editing, store:$("store").value, name:$("name").value.trim(), empNo:$("emp").value.trim(), active:$("act").checked}});
+    toast("已保存"); reset(); load(); });
+  bindImport("staff", load);
+  load();
+}
+
+// ======================= 人资：操作日志 =======================
+function hrLogs(){
+  const d7 = new Date(); d7.setDate(d7.getDate() - 6);
+  shell("操作日志", "人资", true, `<div class="card">
+    <div class="g2 f"><div><label>从</label><input type="date" id="from" value="${ymd(d7)}"></div><div><label>到</label><input type="date" id="to" value="${today()}"></div></div>
+    <div class="g2 f"><select id="code"><option value="">全部账号</option>${ACCOUNTS.map(a => `<option value="${esc(a.code)}">${esc(a.name)}（${esc(a.code)}）</option>`).join("")}</select><select id="act"><option value="">全部操作</option></select></div>
+    <div class="row"><input id="kw" placeholder="搜索内容 / IP / 装置" style="flex:1"><button class="btn sm" id="find">查询</button><button class="btn sec sm" id="exp">导出</button></div>
+    <p class="note" id="ret" style="margin:10px 0 0"></p></div><div class="note" id="cnt" style="margin:0 4px 8px"></div><div id="list"></div><button class="btn sec block hide" id="more">加载更多</button>`);
+  let offset = 0, acts = null;
+  const qs = () => `from=${$("from").value}&to=${$("to").value}&code=${encodeURIComponent($("code").value)}&action=${encodeURIComponent($("act").value)}&q=${encodeURIComponent($("kw").value.trim())}`;
+  const load = (append) => run(null, async () => {
+    if (!append) offset = 0;
+    const d = await api(`/api/hr/logs?${qs()}&limit=100&offset=${offset}`);
+    if (!acts) { acts = d.actions; $("act").innerHTML = `<option value="">全部操作</option>` + acts.map(a => `<option>${esc(a)}</option>`).join(""); }
+    $("ret").textContent = `日志自动保留 ${d.retentionDays} 天（约两个月），更早的会自动清理。${d.oldest ? "目前最早一笔：" + tsFull(d.oldest).slice(0,10) : ""}`;
+    $("cnt").textContent = `共 ${d.total} 笔`;
+    const html = d.logs.map(l => `<div class="rec"><div class="l1"><span>${esc(l.action)}</span><span class="note" style="font-weight:400">${tsFull(l.t)}</span></div>
+      <div class="meta"><b style="color:var(--ink)">${esc(accName(l.code) || l.code || "—")}</b> ${esc(l.code||"")}</div>
+      ${l.detail ? `<div style="font-size:14px;margin:3px 0">${esc(l.detail)}</div>` : ""}
+      <div class="meta">IP：${esc(l.ip||"—")} · ${esc(l.device||"")}</div></div>`).join("");
+    $("list").innerHTML = append ? $("list").innerHTML + html : (html || `<div class="empty">没有日志</div>`);
+    offset += d.logs.length; $("more").classList.toggle("hide", offset >= d.total);
+  });
+  $("find").onclick = () => load(false); $("more").onclick = () => load(true);
+  ["from","to","code","act"].forEach(i => $(i).onchange = () => load(false));
+  $("exp").onclick = () => download("/api/hr/logs/export?" + qs());
+  load(false);
+}
+
+boot();
+})();
+</script>
+</body>
+</html>

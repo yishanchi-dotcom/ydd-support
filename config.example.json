@@ -1,0 +1,10 @@
+{
+  "host": "0.0.0.0",
+  "port": 8080,
+  "db_path": "data/support.db",
+  "log_retention_days": 60,
+  "session_days": 60,
+  "trust_proxy": false,
+  "daily_backup": true,
+  "backup_keep": 30
+}
