@@ -1,0 +1,9 @@
+# 资料库、备份与伺服器设定不进版本库（含伙伴资料、签名、金钥）
+data/
+config.json
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
