@@ -10,7 +10,7 @@ if [ "$SRC" = "$DST" ]; then echo "请在正式版目录执行本脚本"; exit 1
 
 echo "== 复制程式：$SRC → $DST"
 mkdir -p "$DST/static"
-cp "$SRC"/*.py "$DST"/
+cp "$SRC"/*.py "$SRC"/demo_photo.jpg "$DST"/
 cp "$SRC"/static/* "$DST"/static/
 if [ ! -f "$DST/config.json" ]; then
   cat > "$DST/config.json" <<EOF

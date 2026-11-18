@@ -126,12 +126,16 @@ textarea{min-height:76px;resize:vertical}
 @media (max-width:360px){.calc{grid-template-columns:1fr 1fr}}
 .spin{display:inline-block;width:18px;height:18px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+.tabs a{flex:1;text-align:center;padding:8px 0 7px;font-size:12px;color:var(--mute);text-decoration:none;font-weight:700}
+.tabs a i{display:block;font-style:normal;font-size:19px;line-height:1.2}.tabs a.on{color:var(--g)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
 <div class="modal hide" id="modal"><div class="sheet" id="sheet"></div></div>
+<script src="/assets.js"></script>
 <script>
 (() => {
 "use strict";
@@ -213,6 +217,9 @@ const go = h => { if (location.hash === h) render(); else location.hash = h; };
 window.addEventListener("hashchange", () => { if (NEED_PROFILE) return; closeSheet(); render(); });
 
 function shell(title, sub, back, body){
+  const r0 = location.hash.replace("#","").split("?")[0], inA = r0 === "a" || r0.startsWith("a-");
+  const tabs = ME && ME.role === "store" && window.ASSETS && !back ? `<nav class="tabs"><a href="#" class="${inA?"":"on"}"><i>⇄</i>跨店支援工时</a><a href="#a" class="${inA?"on":""}"><i>▣</i>资产管理</a></nav>` : "";
+  if (tabs) body += '<div style="height:64px"></div>' + tabs;
   app.innerHTML = (DEMO ? `<div class="demo">${esc(DEMO)}</div>` : "") + `<div class="bar">${back?`<button class="back" onclick="history.length>1?history.back():location.hash=''">‹</button>`:""}
     <h1>${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</h1>${back?"":`<button class="out" id="logoutBtn">退出</button>`}</div><main id="main">${body}</main>`;
   const lb = $("logoutBtn"); if (lb) lb.onclick = async () => { if ((await ask({text:"确定退出登录？", ok:"退出"})).ok) { try { await api("/api/logout", {method:"POST"}); } catch {} logoutLocal(); } };
@@ -232,7 +239,10 @@ async function render(){
   if (!ME) return renderLogin();
   if (!ACCOUNTS.length) await loadAccounts();
   const r = location.hash.replace("#","").split("?")[0];
-  const V = ME.role === "hr" ? {"":hrHome, accounts:hrAccounts, staff:hrStaff, records:hrRecords, logs:hrLogs, settings:hrSettings, distances:hrDistances} : {"":storeHome, new:storeNew, records:storeRecords, close:storeClose};
+  const A = window.ASSETS ? window.ASSETS.routes(ME.role) : {};
+  const V = ME.role === "hr" ? {"":hrHome, accounts:hrAccounts, staff:hrStaff, records:hrRecords, logs:hrLogs, settings:hrSettings, distances:hrDistances}
+    : ME.role === "store" ? Object.assign({"":storeHome, new:storeNew, records:storeRecords, close:storeClose}, A) : A;
+  if (!V[""]) { app.innerHTML = `<main><div class="card login"><p>资产模块载入失败，请重新整理页面</p></div></main>`; return; }
   (V[r] || V[""])();
   if (ME.role === "store" && NEED_PROFILE) { try { await profileEditor(ME.code, "gate"); } catch (e) { toast(e.message); } }
 }
@@ -254,7 +264,7 @@ async function renderLogin(){
   }
   DEMO = boot.demo || "";
   const demoList = boot.demoAccounts && boot.demoAccounts.length ? `<div class="f" style="margin-top:14px"><label>演示账号（点一下直接登录）</label>
-    <div class="demoacc">${boot.demoAccounts.map(a => `<button type="button" data-code="${esc(a.code)}"><b>${esc(a.name)}</b><span>${esc(a.code)}${a.role === "hr" ? " · 人资" : ""}</span></button>`).join("")}</div></div>` : "";
+    <div class="demoacc">${boot.demoAccounts.map(a => `<button type="button" data-code="${esc(a.code)}"><b>${esc(a.name)}</b><span>${esc(a.code)}${{hr:" · 人资", asset:" · 资产管理", finance:" · 财务"}[a.role] || ""}</span></button>`).join("")}</div></div>` : "";
   app.innerHTML = (DEMO ? `<div class="demo">${esc(DEMO)}</div>` : "") + `<main><form class="card login" id="f" autocomplete="off"><div class="logo">1点</div>
     <h2 style="justify-content:center">跨店支援工时${DEMO ? "（演示版）" : ""}</h2>
     <div class="f"><label>账号（门店编号）</label><input id="c" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="例：TJ001" value="${esc(ls.get("ydd_last")||"")}"></div>
@@ -908,7 +918,7 @@ function bindImport(kind, after){
 function hrAccounts(){
   shell("门店账号", "人资", true, `<div class="card" id="fc"><h2 id="ft">新增门店</h2>
     <div class="g2 f"><div><label>门店编号（登录账号）</label><input id="code" autocapitalize="characters" placeholder="TJ001"></div><div><label>门店名称</label><input id="name" placeholder="南开大悦城店"></div></div>
-    <div class="g2 f"><div><label>门店手机号（选填）</label><input id="phone" inputmode="tel"></div><div><label>类型</label><select id="role"><option value="store">门店</option><option value="hq">总部（只记地址，不能登录）</option><option value="hr">人资</option></select></div></div>
+    <div class="g2 f"><div><label>门店手机号（选填）</label><input id="phone" inputmode="tel"></div><div><label>类型</label><select id="role"><option value="store">门店</option><option value="hq">总部（只记地址，不能登录）</option><option value="hr">人资</option><option value="asset">资产管理员</option><option value="finance">财务</option></select></div></div>
     <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-bottom:12px"><input type="checkbox" id="act" checked> 启用（停用后无法登录）</label>
     <div class="row end"><button class="btn link hide" id="cx">取消修改</button><button class="btn" id="save">保存</button></div></div>
     ${importCard("store")}
@@ -917,9 +927,9 @@ function hrAccounts(){
   const reset = () => { editing = null; ["code","name","phone"].forEach(i => $(i).value = ""); $("code").disabled = false; $("role").value = "store"; $("act").checked = true; $("ft").textContent = "新增门店"; $("cx").classList.add("hide"); };
   const draw = () => { const q = $("q").value.trim().toLowerCase();
     const rs = ACCOUNTS.filter(a => !q || a.code.toLowerCase().includes(q) || a.name.includes(q));
-    $("tbl").innerHTML = `<thead><tr><th>账号</th><th>名称</th><th>位置</th><th>状态</th><th></th></tr></thead><tbody>${rs.map(a => `<tr><td><b>${esc(a.code)}</b>${a.role==="hr"?' <span class="tag">人资</span>':a.role==="hq"?' <span class="tag">总部</span>':""}</td><td>${esc(a.name)}${a.phone?`<div class="note">${esc(a.phone)}</div>`:""}</td>
-      <td>${a.role === "hr" ? "" : a.lat != null ? `<span class="st approved">已定位</span>` : `<span class="st pending">未填</span>`}</td><td>${a.active?'<span class="st approved">启用</span>':'<span class="st off">停用</span>'}</td>
-      <td>${a.role !== "hr" ? `<button class="btn link sm" data-p="${esc(a.code)}">${a.role === "hq" ? "地址" : "营业 / 位置"}</button>` : ""}<button class="btn link sm" data-e="${esc(a.code)}">修改</button></td></tr>`).join("")}</tbody>`;
+    $("tbl").innerHTML = `<thead><tr><th>账号</th><th>名称</th><th>位置</th><th>状态</th><th></th></tr></thead><tbody>${rs.map(a => `<tr><td><b>${esc(a.code)}</b>${{hr:' <span class="tag">人资</span>', hq:' <span class="tag">总部</span>', asset:' <span class="tag">资产管理</span>', finance:' <span class="tag">财务</span>'}[a.role] || ""}</td><td>${esc(a.name)}${a.phone?`<div class="note">${esc(a.phone)}</div>`:""}</td>
+      <td>${a.role !== "store" && a.role !== "hq" ? "" : a.lat != null ? `<span class="st approved">已定位</span>` : `<span class="st pending">未填</span>`}</td><td>${a.active?'<span class="st approved">启用</span>':'<span class="st off">停用</span>'}</td>
+      <td>${a.role === "store" || a.role === "hq" ? `<button class="btn link sm" data-p="${esc(a.code)}">${a.role === "hq" ? "地址" : "营业 / 位置"}</button>` : ""}<button class="btn link sm" data-e="${esc(a.code)}">修改</button></td></tr>`).join("")}</tbody>`;
     $("tbl").querySelectorAll("[data-p]").forEach(b => b.onclick = () => run(null, () => profileEditor(b.dataset.p, "hr", async () => { await loadAccounts(); draw(); })));
     $("tbl").querySelectorAll("[data-e]").forEach(b => b.onclick = () => { const a = ACCOUNTS.find(x => x.code === b.dataset.e); editing = a.code;
       $("code").value = a.code; $("code").disabled = true; $("name").value = a.name; $("phone").value = a.phone || ""; $("role").value = a.role; $("act").checked = !!a.active;
@@ -989,6 +999,7 @@ function hrLogs(){
   load(false);
 }
 
+window.YDD = {api, run, shell, ask, openSheet, closeSheet, toast, esc, fmt, go, download, qparam, ts, tsFull, today, yen, accName, $, me: () => ME, demo: () => DEMO, render};
 boot();
 })();
 </script>

@@ -147,6 +147,73 @@ def _migrate_v4(conn):
         conn.execute("INSERT OR IGNORE INTO settings(key, value) VALUES(?,?)", (k, v))
 
 
+def _exec_many(conn, sql):
+    """逐句执行（executescript 会自动 COMMIT，破坏迁移交易）。"""
+    import re as _re
+    sql = _re.sub(r"--[^\n]*", "", sql)
+    for st in sql.split(";"):
+        if st.strip():
+            conn.execute(st)
+
+
+ASSET_SETTING_DEFAULTS = {
+    "asset_no_prefix": "TJ",          # 资产编号前缀（示例规则：前缀-品项代码-年份-4 位流水号）
+    "oss_region": "oss-cn-beijing", "oss_bucket": "", "oss_ak_id": "", "oss_ak_secret": "",
+    "ai_key": "", "ai_model": "qwen-vl-plus",
+    "stockin_overdue_days": "3",
+}
+
+
+def _migrate_v5(conn):
+    _exec_many(conn, """
+    CREATE TABLE IF NOT EXISTS asset_items(
+        id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE, code TEXT NOT NULL DEFAULT '',
+        price REAL NOT NULL DEFAULT 0, active INTEGER NOT NULL DEFAULT 1, created_at INTEGER);
+    CREATE TABLE IF NOT EXISTS assets(
+        id INTEGER PRIMARY KEY, asset_no TEXT NOT NULL UNIQUE, item_id INTEGER, name TEXT NOT NULL,
+        store TEXT, buy_date TEXT DEFAULT '', price REAL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'active',      -- pending_in 待入库 / active 在用 / transit 调拨中 / scrapped 已报废 / lost 盘亏
+        cond TEXT NOT NULL DEFAULT '正常',          -- 正常 / 闲置 / 损坏待修
+        note TEXT DEFAULT '', purchase_id INTEGER, label_printed INTEGER DEFAULT 0, import_batch TEXT DEFAULT '',
+        created_at INTEGER, updated_at INTEGER);
+    CREATE INDEX IF NOT EXISTS idx_assets_store ON assets(store, status);
+    CREATE TABLE IF NOT EXISTS asset_events(
+        id INTEGER PRIMARY KEY, asset_id INTEGER NOT NULL, t INTEGER, who TEXT, kind TEXT, detail TEXT DEFAULT '', photos TEXT DEFAULT '');
+    CREATE INDEX IF NOT EXISTS idx_asset_events ON asset_events(asset_id);
+    CREATE TABLE IF NOT EXISTS asset_photos(
+        id INTEGER PRIMARY KEY, key TEXT NOT NULL UNIQUE, store TEXT, asset_no TEXT, ctx TEXT, sha TEXT, size INTEGER,
+        location TEXT NOT NULL DEFAULT 'local', ai TEXT DEFAULT '', created_by TEXT, created_at INTEGER);
+    CREATE INDEX IF NOT EXISTS idx_photo_sha ON asset_photos(sha);
+    CREATE TABLE IF NOT EXISTS asset_moves(
+        id INTEGER PRIMARY KEY, kind TEXT NOT NULL,     -- transfer 调拨 / scrap 报废 / stockin 购入入库
+        asset_id INTEGER NOT NULL, from_store TEXT DEFAULT '', to_store TEXT DEFAULT '',
+        status TEXT NOT NULL,                          -- pending 待审批 / approved 待出库 / shipped 待收货(入库) / done / rejected / cancelled / refused 拒收
+        reason TEXT DEFAULT '', note TEXT DEFAULT '', photos TEXT DEFAULT '', created_by TEXT, created_at INTEGER,
+        decided_by TEXT DEFAULT '', decided_at INTEGER, decide_note TEXT DEFAULT '',
+        ship_photos TEXT DEFAULT '', ship_at INTEGER, recv_photos TEXT DEFAULT '', recv_at INTEGER,
+        recv_cond TEXT DEFAULT '', recv_note TEXT DEFAULT '', purchase_id INTEGER, expect_date TEXT DEFAULT '');
+    CREATE INDEX IF NOT EXISTS idx_moves ON asset_moves(status, kind);
+    CREATE TABLE IF NOT EXISTS purchases(
+        id INTEGER PRIMARY KEY, item_id INTEGER, name TEXT, price REAL, qty INTEGER, buy_date TEXT, expect_date TEXT,
+        note TEXT DEFAULT '', created_by TEXT, created_at INTEGER);
+    CREATE TABLE IF NOT EXISTS count_tasks(
+        id INTEGER PRIMARY KEY, name TEXT, ctype TEXT, stores TEXT, items TEXT, mode TEXT, rules TEXT,
+        start_date TEXT, end_date TEXT, review_date TEXT, status TEXT NOT NULL DEFAULT 'open',
+        created_by TEXT, created_at INTEGER, closed_at INTEGER, summary TEXT DEFAULT '');
+    CREATE TABLE IF NOT EXISTS count_lines(
+        id INTEGER PRIMARY KEY, task_id INTEGER NOT NULL, asset_id INTEGER, store TEXT,
+        status TEXT NOT NULL DEFAULT 'todo',          -- todo / ok 符合 / doubt 存疑 / fail 不符合 / missing 找不到 / extra 盘盈
+        cond TEXT DEFAULT '', photo TEXT DEFAULT '', ai TEXT DEFAULT '', note TEXT DEFAULT '', at INTEGER,
+        review TEXT DEFAULT '', review_note TEXT DEFAULT '', extra_name TEXT DEFAULT '', extra_no TEXT DEFAULT '');
+    CREATE INDEX IF NOT EXISTS idx_count_lines ON count_lines(task_id, store);
+    CREATE TABLE IF NOT EXISTS count_submits(task_id INTEGER, store TEXT, at INTEGER, PRIMARY KEY(task_id, store));
+    """)
+    for k, v in ASSET_SETTING_DEFAULTS.items():
+        conn.execute("INSERT OR IGNORE INTO settings(key, value) VALUES(?,?)", (k, v))
+    import secrets as _s
+    conn.execute("INSERT OR IGNORE INTO settings(key, value) VALUES('photo_secret', ?)", (_s.token_hex(16),))
+
+
 # (版本号, 说明, SQL 字串 或 函数(conn))
 # ⚠ 只能在末尾追加，不能修改已发布的项目。
 MIGRATIONS = [
@@ -161,6 +228,7 @@ MIGRATIONS = [
      "CREATE INDEX IF NOT EXISTS idx_req_adj ON requests(adj_by)"),
     (3, "工时拆分与补贴：营业时间、法定节假日、补贴设定、门店定位、营运/非营运工时、夜班与长途补贴", _migrate_v3),
     (4, "长途改用驾车距离：两店距离快取表；人资可指定两店是否长途", _migrate_v4),
+    (5, "资产管理模块：资产目录、资产、履历、照片、调拨 / 报废 / 入库、财务购入、盘点", _migrate_v5),
     # 范例（未来新增栏位时）：
     # (4, "支援记录新增班别栏位", "ALTER TABLE requests ADD COLUMN shift TEXT NOT NULL DEFAULT '';"),
 ]

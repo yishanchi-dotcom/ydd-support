@@ -22,8 +22,9 @@ from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import db
 import xlsx
 import rules
+import assets
 
-APP_VERSION = "1.2.6"
+APP_VERSION = "1.3.0"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 CFG = {
@@ -229,8 +230,8 @@ def api_bootstrap(req):
     out = {"hasHR": has_hr, "version": APP_VERSION, "schema": db.current_version(req.conn)}
     if CFG.get("demo"):
         out["demo"] = CFG.get("demo_note") or "演示版"
-        out["demoAccounts"] = rows(req.conn, """SELECT code, name, role FROM accounts WHERE active=1 AND role IN ('hr','store')
-                                                ORDER BY CASE role WHEN 'hr' THEN 0 ELSE 1 END, code""")
+        out["demoAccounts"] = rows(req.conn, """SELECT code, name, role FROM accounts WHERE active=1 AND role IN ('hr','store','asset','finance')
+                                                ORDER BY CASE role WHEN 'hr' THEN 0 WHEN 'asset' THEN 1 WHEN 'finance' THEN 2 ELSE 3 END, code""")
     return out
 
 
@@ -1107,7 +1108,7 @@ def api_hr_acc_save(req):
     b, c = req.body, req.conn
     code = (b.get("code") or "").strip()
     name = (b.get("name") or "").strip()[:40]
-    role = b.get("role") if b.get("role") in ("hr", "hq") else "store"
+    role = b.get("role") if b.get("role") in ("hr", "hq", "asset", "finance") else "store"
     phone = re.sub(r"[\s-]", "", str(b.get("phone") or ""))[:20]
     active = 1 if b.get("active", True) else 0
     if not CODE_RE.match(code):
@@ -1446,7 +1447,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
-        self.send_header("Cache-Control", "no-store")
+        if "Cache-Control" not in (extra or {}):
+            self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         for k, v in (extra or {}).items():
             self.send_header(k, v)
@@ -1460,6 +1462,11 @@ class Handler(BaseHTTPRequestHandler):
             fp = os.path.join(HERE, "static", "index.html")
             with open(fp, "rb") as f:
                 return self.send(200, f.read(), "text/html; charset=utf-8")
+        if path == "/assets.js":
+            with open(os.path.join(HERE, "static", "assets.js"), "rb") as f:
+                return self.send(200, f.read(), "application/javascript; charset=utf-8")
+        if path.startswith("/p/"):
+            return assets.serve_photo(self, urlparse(self.path))
         if path == "/healthz":
             return self.send(200, {"ok": True, "version": APP_VERSION})
         return self.send(404, {"error": "not found"})
@@ -1501,6 +1508,9 @@ class Handler(BaseHTTPRequestHandler):
                     if not s or not s["active"] or s["last_seen"] < now_ms() - CFG["session_days"] * 86400000:
                         raise ApiError("请重新登录", 401)
                     if auth in ("store", "hr") and s["role"] != auth:
+                        raise ApiError("无权使用此功能", 403)
+                    if s["role"] in ("asset", "finance") and not u.path.startswith("/api/asset/") \
+                            and u.path not in ("/api/me", "/api/logout", "/api/client-log", "/api/accounts"):
                         raise ApiError("无权使用此功能", 403)
                     req.token = tok
                     req.me = {"code": s["code"], "name": s["name"], "role": s["role"]}
@@ -1552,12 +1562,16 @@ def maintenance_loop():
         time.sleep(6 * 3600)
 
 
+assets.init(globals())
+
+
 def main():
     before, after = db.migrate(DB_PATH)
     if before != after:
         print("资料库已升级：v%d → v%d" % (before, after))
     t = threading.Thread(target=maintenance_loop, daemon=True)
     t.start()
+    assets.start_worker()
     os.makedirs(os.path.join(ACME_DIR, ".well-known", "acme-challenge"), exist_ok=True)
     tls = tls_files()
     if tls:
