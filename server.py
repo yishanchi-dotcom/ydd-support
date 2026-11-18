@@ -23,7 +23,7 @@ import db
 import xlsx
 import rules
 
-APP_VERSION = "1.2.5"
+APP_VERSION = "1.2.6"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 CFG = {
@@ -38,12 +38,36 @@ CFG = {
     "demo": False,                 # 演示版：登录页列出示范账号、画面显示「演示版」
     "demo_note": "演示版 · 资料为示范用途，每天凌晨 4 点自动重置",
     "demo_keys_from": "",          # 演示版：重置时从这个正式版资料库复制高德金钥（只读）
+    "tls_cert": "",                # HTTPS 证书（fullchain.pem），与 tls_key 都有且档案存在才启用
+    "tls_key": "",
+    "https_port": 443,             # 启用 HTTPS 时的端口；port 改为只做「转到 https」与证书验证
+    "acme_dir": "data/acme",       # 申请证书时的验证档目录（/.well-known/acme-challenge/）
 }
 _cfg_file = os.path.join(HERE, "config.json")
 if os.path.exists(_cfg_file):
     with open(_cfg_file, encoding="utf-8") as _f:
         CFG.update(json.load(_f))
 DB_PATH = CFG["db_path"] if os.path.isabs(CFG["db_path"]) else os.path.join(HERE, CFG["db_path"])
+ACME_DIR = CFG["acme_dir"] if os.path.isabs(CFG["acme_dir"]) else os.path.join(HERE, CFG["acme_dir"])
+
+
+def tls_files():
+    c, k = CFG.get("tls_cert") or "", CFG.get("tls_key") or ""
+    return (c, k) if c and k and os.path.exists(c) and os.path.exists(k) else None
+
+
+def tls_days_left():
+    """证书剩余天数（未启用 HTTPS 时回传 None）。"""
+    f = tls_files()
+    if not f:
+        return None
+    try:
+        import ssl as _ssl
+        info = _ssl._ssl._test_decode_cert(f[0])
+        exp = _ssl.cert_time_to_seconds(info["notAfter"])
+        return round((exp - time.time()) / 86400.0, 1)
+    except Exception:
+        return None
 
 CODE_RE = re.compile(r"^[A-Za-z0-9_-]{1,30}$")
 STATUS = {"pending": "待对方确认", "approved": "已归档", "rejected": "已驳回", "withdrawn": "已撤回",
@@ -782,7 +806,7 @@ def api_hr_home(req):
         hq_in = with_events(c, rows(c, "SELECT * FROM requests WHERE status='pending' AND counterparty IN (%s) ORDER BY date" % ph, hqs))
         hq_adj = with_events(c, rows(c, """SELECT * FROM requests WHERE status='approved' AND adj_by IS NOT NULL AND adj_by NOT IN (%s)
                                           AND (to_store IN (%s) OR from_store IN (%s)) ORDER BY date""" % (ph, ph, ph), hqs * 3))
-    return {"disputes": disputes, "hqInbox": hq_in, "hqAdj": hq_adj, "overview": overview(c, month),
+    return {"disputes": disputes, "hqInbox": hq_in, "hqAdj": hq_adj, "overview": overview(c, month), "tlsDays": tls_days_left(),
             "counts": {"stores": one(c, "SELECT COUNT(*) AS n FROM accounts WHERE role='store' AND active=1")["n"],
                        "staff": one(c, "SELECT COUNT(*) AS n FROM staff WHERE active=1")["n"],
                        "noProfile": sum(1 for a in rows(c, "SELECT code FROM accounts WHERE role='store' AND active=1") if not profile_complete(c, a["code"]))}}
@@ -1338,9 +1362,65 @@ def api_hr_logs_export(req):
 
 
 # ---------------------------------------------------------------- HTTP
+def serve_acme(h, path):
+    """申请 / 续期 HTTPS 证书时，证书机构来读的验证档。"""
+    name = path.rsplit("/", 1)[-1]
+    fp = os.path.join(ACME_DIR, ".well-known", "acme-challenge", name)
+    if not re.match(r"^[A-Za-z0-9_-]{8,200}$", name) or not os.path.isfile(fp):
+        return h.send(404, "not found", "text/plain")
+    with open(fp, "rb") as f:
+        return h.send(200, f.read(), "text/plain")
+
+
+class RedirectHandler(BaseHTTPRequestHandler):
+    """启用 HTTPS 后，原本的 http 端口：证书验证档照常提供，其余一律转到 https。"""
+    server_version = "YDD-Support"
+    protocol_version = "HTTP/1.1"
+    timeout = 30
+
+    def log_message(self, fmt, *args):
+        pass
+
+    def send(self, status, body, ctype="text/plain", extra=None):
+        body = body.encode("utf-8") if isinstance(body, str) else body
+        self.send_response(status)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        for k, v in (extra or {}).items():
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        path = urlparse(self.path).path
+        if path.startswith("/.well-known/acme-challenge/"):
+            return serve_acme(self, path)
+        host = (self.headers.get("Host") or "").split(":")[0] or "localhost"
+        port = int(CFG.get("https_port", 443))
+        target = "https://%s%s%s" % (host, "" if port == 443 else ":%d" % port, self.path)
+        return self.send(301, "moved", extra={"Location": target})
+
+    do_HEAD = do_GET
+
+    def do_POST(self):
+        return self.do_GET()
+
+
+class QuietServer(ThreadingHTTPServer):
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        import ssl as _ssl
+        e = sys.exc_info()[1]
+        if isinstance(e, (_ssl.SSLError, ConnectionError, TimeoutError, OSError)):
+            return    # 握手失败、用 http 连到 https 端口、断线：不必印出
+        super().handle_error(request, client_address)
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "YDD-Support/" + APP_VERSION
     protocol_version = "HTTP/1.1"
+    timeout = 120    # 单次读写逾时（避免卡住的连线占住执行绪）
 
     def log_message(self, fmt, *args):
         pass  # 不在主控台刷屏；操作记录写入 logs 表
@@ -1374,6 +1454,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def static(self, path):
+        if path.startswith("/.well-known/acme-challenge/"):
+            return serve_acme(self, path)
         if path in ("/", "/index.html"):
             fp = os.path.join(HERE, "static", "index.html")
             with open(fp, "rb") as f:
@@ -1476,19 +1558,35 @@ def main():
         print("资料库已升级：v%d → v%d" % (before, after))
     t = threading.Thread(target=maintenance_loop, daemon=True)
     t.start()
-    srv = ThreadingHTTPServer((CFG["host"], int(CFG["port"])), Handler)
-    srv.daemon_threads = True
-    print("1点点 跨店支援工时系统 v%s 已启动%s" % (APP_VERSION, "（演示版）" if CFG.get("demo") else ""))
-    print("资料库：%s（结构版本 v%d）" % (DB_PATH, after))
-    print("电脑浏览器打开：http://localhost:%s" % CFG["port"])
-    try:
-        import socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("10.255.255.255", 1))
-        print("同一 Wi-Fi 的手机打开：http://%s:%s" % (s.getsockname()[0], CFG["port"]))
-        s.close()
-    except Exception:
-        pass
+    os.makedirs(os.path.join(ACME_DIR, ".well-known", "acme-challenge"), exist_ok=True)
+    tls = tls_files()
+    if tls:
+        import ssl
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        ctx.load_cert_chain(tls[0], tls[1])
+        hport = int(CFG.get("https_port", 443))
+        srv = QuietServer((CFG["host"], hport), Handler)
+        srv.socket = ctx.wrap_socket(srv.socket, server_side=True, do_handshake_on_connect=False)
+        if int(CFG["port"]) != hport:
+            red = QuietServer((CFG["host"], int(CFG["port"])), RedirectHandler)
+            threading.Thread(target=red.serve_forever, daemon=True).start()
+        print("1点点 跨店支援工时系统 v%s 已启动（HTTPS）%s" % (APP_VERSION, "（演示版）" if CFG.get("demo") else ""))
+        print("资料库：%s（结构版本 v%d）" % (DB_PATH, after))
+        print("网址：https://<伺服器IP>%s　证书剩余 %s 天" % ("" if hport == 443 else ":%d" % hport, tls_days_left()))
+    else:
+        srv = QuietServer((CFG["host"], int(CFG["port"])), Handler)
+        print("1点点 跨店支援工时系统 v%s 已启动%s" % (APP_VERSION, "（演示版）" if CFG.get("demo") else ""))
+        print("资料库：%s（结构版本 v%d）" % (DB_PATH, after))
+        print("电脑浏览器打开：http://localhost:%s" % CFG["port"])
+        try:
+            import socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("10.255.255.255", 1))
+            print("同一 Wi-Fi 的手机打开：http://%s:%s" % (s.getsockname()[0], CFG["port"]))
+            s.close()
+        except Exception:
+            pass
     print("按 Ctrl+C 停止服务")
     try:
         srv.serve_forever()

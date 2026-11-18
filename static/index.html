@@ -740,7 +740,8 @@ function hrHome(){
     $("c1").textContent = `启用中 ${d.counts.stores} 家门店` + (d.counts.noProfile ? `，${d.counts.noProfile} 家尚未填营业时间 / 位置` : "");
     $("c2").textContent = `在职 ${d.counts.staff} 人`;
     const hq = d.hqInbox.length + d.hqAdj.length;
-    $("hqb").innerHTML = hq ? `<button class="banner info" id="hqOpen"><span>总部有 <b>${hq}</b> 笔支援 / 调整待你确认</span><span>去处理 ›</span></button>` : "";
+    const tlsWarn = d.tlsDays != null && d.tlsDays < 3 ? `<div class="banner err"><span>HTTPS 证书只剩 ${d.tlsDays} 天，可能没有自动续期成功。请联系系统维护者，在伺服器执行 <b>bash /opt/ydd-support/https_setup.sh</b></span></div>` : "";
+    $("hqb").innerHTML = tlsWarn + (hq ? `<button class="banner info" id="hqOpen"><span>总部有 <b>${hq}</b> 笔支援 / 调整待你确认</span><span>去处理 ›</span></button>` : "");
     if (hq) $("hqOpen").onclick = () => inboxSheet(d.hqInbox, d.hqAdj, () => load());
     $("disp").innerHTML = d.disputes.length ? `<div class="card" style="border-color:var(--red)"><h2>疑义待处理 <span class="st disputed">${d.disputes.length}</span></h2>
       ${d.disputes.map(r => recCard(r, `<button class="btn sec sm" data-k="${r.id}">维持记录</button><button class="btn red sm" data-c="${r.id}">同意取消</button>`, {history:true})).join("")}</div>` : "";

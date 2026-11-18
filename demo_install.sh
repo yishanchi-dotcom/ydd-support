@@ -19,13 +19,17 @@ EOF
 fi
 grep -q '"demo": *true' "$DST/config.json" || { echo "$DST/config.json 不是演示版设定，已停止"; exit 1; }
 # 旧的演示版设定补上「从正式版套用金钥」
-python3 - "$DST/config.json" "$SRC/data/support.db" <<'PY'
-import json, sys
-p, src = sys.argv[1], sys.argv[2]
+python3 - "$DST/config.json" "$SRC/data/support.db" "$SRC/config.json" <<'PY'
+import json, os, sys
+p, src, prod = sys.argv[1], sys.argv[2], sys.argv[3]
 c = json.load(open(p, encoding="utf-8"))
 if not c.get("demo_keys_from"):
     c["demo_keys_from"] = src
-    json.dump(c, open(p, "w", encoding="utf-8"), ensure_ascii=False)
+# 正式版已启用 HTTPS：演示版共用同一张证书
+pc = json.load(open(prod, encoding="utf-8")) if os.path.exists(prod) else {}
+if pc.get("tls_cert") and not c.get("tls_cert"):
+    c.update({"tls_cert": pc["tls_cert"], "tls_key": pc["tls_key"], "https_port": c.get("port", 8081)})
+json.dump(c, open(p, "w", encoding="utf-8"), ensure_ascii=False)
 PY
 
 if [ -z "$NO_SYSTEMD" ]; then
@@ -55,5 +59,5 @@ EOF
   systemctl enable --now ydd-demo >/dev/null 2>&1
   systemctl restart ydd-demo
   sleep 1
-  systemctl is-active ydd-demo >/dev/null && echo "== 演示版已启动：http://$(curl -s --max-time 3 ifconfig.me || echo 伺服器IP):$PORT" || { echo "演示版启动失败："; journalctl -u ydd-demo -n 20 --no-pager; exit 1; }
+  systemctl is-active ydd-demo >/dev/null && echo "== 演示版已启动：$(grep -q '"tls_cert": *"/' "$DST/config.json" && echo https || echo http)://$(curl -s --max-time 3 ifconfig.me || echo 伺服器IP):$PORT" || { echo "演示版启动失败："; journalctl -u ydd-demo -n 20 --no-pager; exit 1; }
 fi

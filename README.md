@@ -1,11 +1,12 @@
 # 1点点 跨店支援工时系统 · 部署与维护说明
 
-版本：1.2.5　资料库结构：v4
+版本：1.2.6　资料库结构：v4
 
 ## 更新记录
 
 | 版本 | 日期 | 内容 | 资料库 |
 |---|---|---|---|
+| 1.2.6 | 2026-11-18 | HTTPS：系统可直接提供 https（config.json 的 tls_cert / tls_key），原 http 端口自动转到 https 并提供证书验证档；`https_setup.sh` 一键为伺服器 IP 申请 Let's Encrypt 6 天短效证书并自动续期；人资首页在证书剩余不到 3 天时提示；演示版共用同一张证书 | 无变更 |
 | 1.2.5 | 2026-11-16 | 演示版每次重置时自动从正式版套用高德金钥（只读）；演示版设定页不显示、也不能修改金钥 | 无变更 |
 | 1.2.4 | 2026-11-16 | 发起支援新增「进阶设定」：可直接选非营运支援与项目（开会 / 大扫除 / 筹备 / 培训），去总部时隐藏；演示版横条不再遮住标题 | 无变更 |
 | 1.2.3 | 2026-11-16 | 演示版：`demo_install.sh` 一键安装到 /opt/ydd-demo（端口 8081，独立资料库，每天凌晨 4 点重置示范资料）；登录页列出示范账号、画面顶部显示「演示版」 | 无变更 |
@@ -25,6 +26,7 @@ ydd-support/
 ├─ xlsx.py              Excel 读写（导入、导出）
 ├─ demo_seed.py         演示版示范资料（只在 config.json "demo": true 的目录执行）
 ├─ demo_install.sh      在伺服器安装 / 更新演示版
+├─ https_setup.sh       为伺服器 IP 申请免费 HTTPS 证书并自动续期
 ├─ rules.py             工时与补贴计算规则（三倍薪、夜班、长途、非营运、总部午休）
 ├─ static/index.html    手机网页介面
 ├─ config.example.json  设定档范例（复制为 config.json 后修改）
@@ -141,3 +143,17 @@ ydd-support/
 - 停用演示版：`systemctl disable --now ydd-demo && rm /etc/cron.d/ydd-demo`
 - `demo_seed.py` 只在 config.json 含 `"demo": true` 的目录执行，正式版执行会被拒绝
 - 高德金钥：演示版 config.json 的 `demo_keys_from` 指向正式版资料库，每次重置时以只读方式复制金钥；演示版设定页不显示、不能修改金钥。正式版改了金钥，演示版隔天凌晨（或手动重置后）生效
+
+
+## HTTPS（不用网域、不用备案）
+
+用 Let's Encrypt 的 IP 证书（效期 6 天，必须自动续期）。
+
+1. 阿里云防火墙放行 TCP 80、443
+2. 伺服器执行：`bash /opt/ydd-support/https_setup.sh`（取不到 IP 时：`bash /opt/ydd-support/https_setup.sh 47.95.151.115`）
+3. 脚本会：安装 snap 版 certbot（≥ 5.4）→ 以 webroot 方式申请证书（验证档放在 data/acme，由系统在 80 端口提供）→ 设定剩 3 天续期、续期后重启服务 → 在 config.json 写入 tls_cert / tls_key / https_port → 重启
+4. 启用后：443 提供系统；80 只做「转到 https」与证书验证；演示版 8081 改为 https
+5. 续期：certbot 的 systemd 排程每天检查两次；人资首页在证书剩余不到 3 天时显示警告。手动续期：`certbot renew`
+6. 关闭 HTTPS：把 config.json 的 tls_cert 改为空字串，重启服务
+
+注意：http 与 https 是不同网址，启用后每部手机需要重新登录一次（只要输入账号）。
