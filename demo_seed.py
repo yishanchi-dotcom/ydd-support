@@ -74,20 +74,20 @@ def D(day):
 
 hr = call("/api/setup", {"code": "HR", "name": "人资部"})["token"]
 call("/api/hr/import", {"kind": "store", "apply": True, "text": "\n".join([
-    "TJ001\t和平大悦城店", "TJ002\t南开大悦城店", "TJ005\t奥城店", "TJ007\t天河城店", "TJ009\t于家堡店", "TJ010\t新开店（示范首次登录）"])}, hr)
+    "10490001\t和平大悦城店", "10490002\t南开大悦城店", "10490003\t奥城店", "10490004\t天河城店", "10490005\t于家堡店", "10490006\t新开店（示范首次登录）"])}, hr)
 call("/api/hr/accounts", {"code": "HQ", "name": "总部", "role": "hq", "isNew": True}, hr)
 call("/api/hr/import", {"kind": "staff", "apply": True, "text": "\n".join([
-    "TJ001\t小明\tA101", "TJ001\t小美\tA102", "TJ002\t阿杰\tB201", "TJ002\t小芳\tB202",
-    "TJ005\t小林\tC501", "TJ005\t小雨\tC502", "TJ007\t小王\tD701", "TJ009\t小华\tE901"])}, hr)
+    "10490001\t小明\tA101", "10490001\t小美\tA102", "10490002\t阿杰\tB201", "10490002\t小芳\tB202",
+    "10490003\t小林\tC501", "10490003\t小雨\tC502", "10490004\t小王\tD701", "10490005\t小华\tE901"])}, hr)
 
 DAILY = [{"days": [], "open": "10:00", "close": "22:00"}]
 PROFILES = {
-    "TJ001": ("天津市和平区南京路 和平大悦城", 39.1255, 117.1950, DAILY),
-    "TJ002": ("天津市南开区南门外大街 南开大悦城", 39.1390, 117.1630, DAILY),
-    "TJ005": ("天津市南开区奥城商业广场", 39.0950, 117.1580,
+    "10490001": ("天津市和平区南京路 和平大悦城", 39.1255, 117.1950, DAILY),
+    "10490002": ("天津市南开区南门外大街 南开大悦城", 39.1390, 117.1630, DAILY),
+    "10490003": ("天津市南开区奥城商业广场", 39.0950, 117.1580,
               [{"days": [], "open": "10:00", "close": "24:00"}, {"days": [5, 6, 7], "open": "10:00", "close": "25:00"}]),
-    "TJ007": ("天津市河西区天河城", 39.1180, 117.2090, DAILY),
-    "TJ009": ("天津市滨海新区于家堡", 39.0080, 117.7010, DAILY),
+    "10490004": ("天津市河西区天河城", 39.1180, 117.2090, DAILY),
+    "10490005": ("天津市滨海新区于家堡", 39.0080, 117.7010, DAILY),
     "HQ":    ("天津市河西区友谊路（总部）", 39.1100, 117.2150, None),
 }
 for code, (addr, lat, lng, hours) in PROFILES.items():
@@ -99,7 +99,7 @@ for code, (addr, lat, lng, hours) in PROFILES.items():
 HOLI = D(13)
 call("/api/hr/holidays", {"date": HOLI, "name": "示范用节假日"}, hr)
 
-tok = {c: call("/api/login", {"code": c})["token"] for c in ("TJ001", "TJ002", "TJ005", "TJ007", "TJ009")}
+tok = {c: call("/api/login", {"code": c})["token"] for c in ("10490001", "10490002", "10490003", "10490004", "10490005")}
 staff = {}
 for c in tok:
     for s in call("/api/staff?store=" + c, tok=tok[c])["staff"]:
@@ -117,28 +117,28 @@ def act(rid, action, who_tok, **kw):
     return call("/api/requests/%d/%s" % (rid, action), kw, who_tok)
 
 # 已归档：夜班
-r = new("TJ001", "out", "TJ005", "小明", 2, "18:00", "24:30"); act(r, "approve", tok["TJ005"])
+r = new("10490001", "out", "10490003", "小明", 2, "18:00", "24:30"); act(r, "approve", tok["10490003"])
 # 已归档：长途
-r = new("TJ001", "out", "TJ009", "小美", 4, "13:00", "18:00"); act(r, "approve", tok["TJ009"])
+r = new("10490001", "out", "10490005", "小美", 4, "13:00", "18:00"); act(r, "approve", tok["10490005"])
 # 已归档：调入
-r = new("TJ002", "in", "TJ001", "小明", 6, "10:00", "18:00", "促销活动"); act(r, "approve", tok["TJ001"])
+r = new("10490002", "in", "10490001", "小明", 6, "10:00", "18:00", "促销活动"); act(r, "approve", tok["10490001"])
 # 已归档：总部开会（人资同意）
-r = new("TJ001", "out", "HQ", "小美", 9, "09:00", "18:00", "培训带教"); act(r, "approve", hr)
+r = new("10490001", "out", "HQ", "小美", 9, "09:00", "18:00", "培训带教"); act(r, "approve", hr)
 # 已归档：超出营业时间 → 大扫除（非营运）
-r = new("TJ007", "out", "TJ005", "小王", 11, "07:00", "12:00", special="大扫除"); act(r, "approve", tok["TJ005"])
+r = new("10490004", "out", "10490003", "小王", 11, "07:00", "12:00", special="大扫除"); act(r, "approve", tok["10490003"])
 # 已归档：节假日三倍薪
-r = new("TJ005", "out", "TJ007", "小林", 13, "10:00", "18:00"); act(r, "approve", tok["TJ007"])
+r = new("10490003", "out", "10490004", "小林", 13, "10:00", "18:00"); act(r, "approve", tok["10490004"])
 # 已归档 + 工时调整待确认（南开大悦城店会看到弹窗）
-r = new("TJ002", "out", "TJ001", "阿杰", 16, "14:00", "20:00"); act(r, "approve", tok["TJ001"])
-act(r, "adjust", tok["TJ001"], start="14:00", end="19:00", note="当天提早一小时结束")
+r = new("10490002", "out", "10490001", "阿杰", 16, "14:00", "20:00"); act(r, "approve", tok["10490001"])
+act(r, "adjust", tok["10490001"], start="14:00", end="19:00", note="当天提早一小时结束")
 # 已归档 + 疑义（人资首页会看到）
-r = new("TJ005", "out", "TJ002", "小雨", 6, "12:00", "20:00"); act(r, "approve", tok["TJ002"])
-act(r, "dispute", tok["TJ002"], note="当天伙伴实际没有到店，请人资确认")
+r = new("10490003", "out", "10490002", "小雨", 6, "12:00", "20:00"); act(r, "approve", tok["10490002"])
+act(r, "dispute", tok["10490002"], note="当天伙伴实际没有到店，请人资确认")
 # 已驳回
-r = new("TJ009", "out", "TJ001", "小华", 20, "10:00", "16:00"); act(r, "reject", tok["TJ001"], note="当天人手已足够")
+r = new("10490005", "out", "10490001", "小华", 20, "10:00", "16:00"); act(r, "reject", tok["10490001"], note="当天人手已足够")
 # 待确认（奥城店、天河城店登录会看到弹窗）
-new("TJ001", "out", "TJ005", "小美", 18, "12:00", "18:00", "促销活动")
-new("TJ002", "in", "TJ007", "小王", 18, "11:00", "17:00")
+new("10490001", "out", "10490003", "小美", 18, "12:00", "18:00", "促销活动")
+new("10490002", "in", "10490004", "小王", 18, "11:00", "17:00")
 
 # ---------------- 资产管理示范资料（v1.3）
 import base64
@@ -151,8 +151,8 @@ for n, cd, p in [("制冰机", "ZB", 12800), ("冷藏柜", "LC", 6500), ("萃茶
     call("/api/asset/items", {"name": n, "code": cd, "price": p}, zc)
 y = today.year
 ROWS, k = [], 0
-for st, plan in [("TJ001", "ZB LC LC CC FK FK GT KS SY ZG"), ("TJ002", "ZB LC CC FK GT KS SY"), ("TJ005", "ZB ZB LC CC FK FK GT KS SY ZG"),
-                 ("TJ007", "ZB LC CC FK GT KS SY"), ("TJ009", "ZB LC CC FK GT SY")]:
+for st, plan in [("10490001", "ZB LC LC CC FK FK GT KS SY ZG"), ("10490002", "ZB LC CC FK GT KS SY"), ("10490003", "ZB ZB LC CC FK FK GT KS SY ZG"),
+                 ("10490004", "ZB LC CC FK GT KS SY"), ("10490005", "ZB LC CC FK GT SY")]:
     for cd in plan.split():
         k += 1
         yr = y - 1 - (k % 3)
@@ -168,49 +168,49 @@ def photo(t, ctx, no=""):
     data = "data:image/jpeg;base64," + base64.b64encode(PHOTO + b"demo%d" % _n[0]).decode()
     return call("/api/asset/photo", {"data": data, "ctx": ctx, "assetNo": no}, t)["key"]
 A = {}
-for t in (tok["TJ001"], tok["TJ002"], tok["TJ005"], tok["TJ007"], tok["TJ009"]):
+for t in (tok["10490001"], tok["10490002"], tok["10490003"], tok["10490004"], tok["10490005"]):
     for a in call("/api/asset/assets", tok=t)["assets"]:
         A.setdefault(a["store"], []).append(a)
 # 调拨：奥城店制冰机 → 和平大悦城店（已审批，等奥城店出库）
-zb = [a for a in A["TJ005"] if a["name"] == "制冰机"][1]
-call("/api/asset/request", {"kind": "transfer", "dir": "in", "store": "TJ005", "ids": [zb["id"]], "reason": "旺季产能不足"}, tok["TJ001"])
+zb = [a for a in A["10490003"] if a["name"] == "制冰机"][1]
+call("/api/asset/request", {"kind": "transfer", "dir": "in", "store": "10490003", "ids": [zb["id"]], "reason": "旺季产能不足"}, tok["10490001"])
 mv = call("/api/asset/moves?status=pending", tok=zc)["moves"][0]
 call("/api/asset/move/%d/decide" % mv["id"], {"ok": True}, zc)
 # 调拨：天河城店闲置开水机 → 于家堡店（待审批）
-ks = [a for a in A["TJ007"] if a["name"] == "开水机"][0]
-call("/api/asset/request", {"kind": "transfer", "dir": "out", "store": "TJ009", "ids": [ks["id"]], "reason": "本店闲置，于家堡店缺开水机"}, tok["TJ007"])
+ks = [a for a in A["10490004"] if a["name"] == "开水机"][0]
+call("/api/asset/request", {"kind": "transfer", "dir": "out", "store": "10490005", "ids": [ks["id"]], "reason": "本店闲置，于家堡店缺开水机"}, tok["10490004"])
 # 报废：南开大悦城店封口机（待审批）
-fk = [a for a in A["TJ002"] if a["name"] == "封口机"][0]
+fk = [a for a in A["10490002"] if a["name"] == "封口机"][0]
 call("/api/asset/request", {"kind": "scrap", "ids": [fk["id"]], "reason": "损坏无法维修", "note": "加热片烧坏，维修报价超过半价",
-                            "photos": [photo(tok["TJ002"], "scrap", fk["asset_no"])]}, tok["TJ002"])
+                            "photos": [photo(tok["10490002"], "scrap", fk["asset_no"])]}, tok["10490002"])
 # 已完成调拨：南开大悦城店果糖机 → 奥城店
-gt = [a for a in A["TJ002"] if a["name"] == "果糖机"][0]
-call("/api/asset/request", {"kind": "transfer", "dir": "out", "store": "TJ005", "ids": [gt["id"]], "reason": "门店装修暂停营业"}, tok["TJ002"])
+gt = [a for a in A["10490002"] if a["name"] == "果糖机"][0]
+call("/api/asset/request", {"kind": "transfer", "dir": "out", "store": "10490003", "ids": [gt["id"]], "reason": "门店装修暂停营业"}, tok["10490002"])
 mv = call("/api/asset/moves?status=pending", tok=zc)["moves"][0]
 call("/api/asset/move/%d/decide" % mv["id"], {"ok": True}, zc)
-call("/api/asset/move/%d/ship" % mv["id"], {"photos": [photo(tok["TJ002"], "ship", gt["asset_no"])]}, tok["TJ002"])
-call("/api/asset/move/%d/receive" % mv["id"], {"photos": [photo(tok["TJ005"], "recv", gt["asset_no"])], "cond": "完好"}, tok["TJ005"])
+call("/api/asset/move/%d/ship" % mv["id"], {"photos": [photo(tok["10490002"], "ship", gt["asset_no"])]}, tok["10490002"])
+call("/api/asset/move/%d/receive" % mv["id"], {"photos": [photo(tok["10490003"], "recv", gt["asset_no"])], "cond": "完好"}, tok["10490003"])
 # 财务购入：封口机 × 3（和平 1、于家堡 2；于家堡已入库 1 件）
 items = {i["name"]: i["id"] for i in call("/api/asset/meta", tok=cw)["items"]}
 exp = (today + datetime.timedelta(days=2)).isoformat()
 call("/api/asset/purchase", {"item_id": items["封口机"], "buy_date": today.isoformat(), "expect_date": exp, "note": "门店扩产",
-                             "alloc": [{"store": "TJ001", "qty": 1}, {"store": "TJ009", "qty": 2}]}, cw)
+                             "alloc": [{"store": "10490001", "qty": 1}, {"store": "10490005", "qty": 2}]}, cw)
 call("/api/asset/purchase", {"item_id": items["展示冰柜"], "price": 5900, "buy_date": (today - datetime.timedelta(days=12)).isoformat(),
-                             "expect_date": (today - datetime.timedelta(days=8)).isoformat(), "alloc": [{"store": "TJ007", "qty": 1}]}, cw)
-si = [m for m in call("/api/asset/store/home", tok=tok["TJ009"])["todo"] if m["kind"] == "stockin"][0]
-call("/api/asset/move/%d/receive" % si["id"], {"photos": [photo(tok["TJ009"], "stockin", si["asset_no"])], "cond": "完好"}, tok["TJ009"])
+                             "expect_date": (today - datetime.timedelta(days=8)).isoformat(), "alloc": [{"store": "10490004", "qty": 1}]}, cw)
+si = [m for m in call("/api/asset/store/home", tok=tok["10490005"])["todo"] if m["kind"] == "stockin"][0]
+call("/api/asset/move/%d/receive" % si["id"], {"photos": [photo(tok["10490005"], "stockin", si["asset_no"])], "cond": "完好"}, tok["10490005"])
 # 盘点：和平大悦城店、南开大悦城店，和平已盘一部分
 end = (today + datetime.timedelta(days=5)).isoformat()
-tk = call("/api/asset/count", {"name": "%d 年 %d 月资产盘点" % (today.year, today.month), "ctype": "月度盘点", "stores": ["TJ001", "TJ002"], "items": "all",
+tk = call("/api/asset/count", {"name": "%d 年 %d 月资产盘点" % (today.year, today.month), "ctype": "月度盘点", "stores": ["10490001", "10490002"], "items": "all",
                                "start_date": today.isoformat(), "end_date": end, "review_date": end, "note": "后场与仓库设备也要盘"}, zc)
-lines = call("/api/asset/count/detail?id=%d" % tk["id"], tok=tok["TJ001"])["lines"]
+lines = call("/api/asset/count/detail?id=%d" % tk["id"], tok=tok["10490001"])["lines"]
 for i, l in enumerate(lines[:6]):
     if i == 4:
-        call("/api/asset/count/line", {"id": l["id"], "missing": True, "note": "店内找不到，可能之前借给别店"}, tok["TJ001"])
+        call("/api/asset/count/line", {"id": l["id"], "missing": True, "note": "店内找不到，可能之前借给别店"}, tok["10490001"])
     else:
-        call("/api/asset/count/line", {"id": l["id"], "photos": [photo(tok["TJ001"], "count", l["asset_no"])], "cond": "损坏待修" if i == 2 else "正常",
-                                       "note": "门把松动" if i == 2 else ""}, tok["TJ001"])
-call("/api/asset/count/extra", {"task": tk["id"], "name": "果糖机", "photos": [photo(tok["TJ001"], "count")], "note": "仓库发现，无标签"}, tok["TJ001"])
+        call("/api/asset/count/line", {"id": l["id"], "photos": [photo(tok["10490001"], "count", l["asset_no"])], "cond": "损坏待修" if i == 2 else "正常",
+                                       "note": "门把松动" if i == 2 else ""}, tok["10490001"])
+call("/api/asset/count/extra", {"task": tk["id"], "name": "果糖机", "photos": [photo(tok["10490001"], "count")], "note": "仓库发现，无标签"}, tok["10490001"])
 for t in (zc, cw):
     call("/api/logout", {}, t)
 

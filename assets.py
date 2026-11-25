@@ -534,7 +534,7 @@ def init(g):
     def api_tpl(req):
         need(req, "asset")
         data = xlsx.write([("资产导入", [["资产编号*", "资产名称*", "归属门店*", "购入时间*", "价格", "状态", "备注"],
-                                     ["TJ-ZB-2025-0001", "制冰机", "TJ005", "2025-03", "", "在用", ""]], [18, 14, 12, 12, 10, 10, 20])])
+                                     ["TJ-ZB-2025-0001", "制冰机", "10490003", "2025-03", "", "在用", ""]], [18, 14, 12, 12, 10, 10, 20])])
         return {"__file__": data, "filename": "资产导入模板.xlsx", "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
 
     def parse_import(c, b):

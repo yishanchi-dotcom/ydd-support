@@ -267,7 +267,7 @@ async function renderLogin(){
     <div class="demoacc">${boot.demoAccounts.map(a => `<button type="button" data-code="${esc(a.code)}"><b>${esc(a.name)}</b><span>${esc(a.code)}${{hr:" · 人资", asset:" · 资产管理", finance:" · 财务"}[a.role] || ""}</span></button>`).join("")}</div></div>` : "";
   app.innerHTML = (DEMO ? `<div class="demo">${esc(DEMO)}</div>` : "") + `<main><form class="card login" id="f" autocomplete="off"><div class="logo">1点</div>
     <h2 style="justify-content:center">跨店支援工时${DEMO ? "（演示版）" : ""}</h2>
-    <div class="f"><label>账号（门店编号）</label><input id="c" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="例：TJ001" value="${esc(ls.get("ydd_last")||"")}"></div>
+    <div class="f"><label>账号（门店编号）</label><input id="c" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="例：10490001" value="${esc(ls.get("ydd_last")||"")}"></div>
     <button class="btn block">登录</button>
     <p class="note" style="text-align:center;margin:12px 0 0">账号无法登录请联系人资</p>${demoList}</form></main>`;
   app.querySelectorAll(".demoacc [data-code]").forEach(b => b.onclick = e => run(e.currentTarget, async () => afterLogin(await api("/api/login", {method:"POST", body:{code:b.dataset.code}}))));
@@ -917,7 +917,7 @@ function bindImport(kind, after){
 // ======================= 人资：门店账号 =======================
 function hrAccounts(){
   shell("门店账号", "人资", true, `<div class="card" id="fc"><h2 id="ft">新增门店</h2>
-    <div class="g2 f"><div><label>门店编号（登录账号）</label><input id="code" autocapitalize="characters" placeholder="TJ001"></div><div><label>门店名称</label><input id="name" placeholder="南开大悦城店"></div></div>
+    <div class="g2 f"><div><label>门店编号（登录账号）</label><input id="code" autocapitalize="characters" placeholder="10490001"></div><div><label>门店名称</label><input id="name" placeholder="南开大悦城店"></div></div>
     <div class="g2 f"><div><label>门店手机号（选填）</label><input id="phone" inputmode="tel"></div><div><label>类型</label><select id="role"><option value="store">门店</option><option value="hq">总部（只记地址，不能登录）</option><option value="hr">人资</option><option value="asset">资产管理员</option><option value="finance">财务</option></select></div></div>
     <label style="display:flex;gap:8px;align-items:center;color:var(--ink);margin-bottom:12px"><input type="checkbox" id="act" checked> 启用（停用后无法登录）</label>
     <div class="row end"><button class="btn link hide" id="cx">取消修改</button><button class="btn" id="save">保存</button></div></div>
